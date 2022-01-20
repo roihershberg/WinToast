@@ -35,7 +35,7 @@
 #include <functiondiscoverykeys.h>
 #include <iostream>
 #include <winstring.h>
-#include <string.h>
+#include <cstring>
 #include <vector>
 #include <map>
 using namespace Microsoft::WRL;

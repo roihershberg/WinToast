@@ -20,7 +20,7 @@
 
 #include "wintoastlib.h"
 #include <memory>
-#include <assert.h>
+#include <cassert>
 #include <unordered_map>
 #include <array>
 
