@@ -5,17 +5,17 @@ using namespace WinToastLib;
 
 class CustomHandler : public IWinToastHandler {
 public:
-    void toastActivated() const {
+    void toastActivated() const override {
         std::wcout << L"The user clicked in this toast" << std::endl;
         exit(0);
     }
 
-    void toastActivated(int actionIndex) const {
+    void toastActivated(int actionIndex) const override {
         std::wcout << L"The user clicked on action #" << actionIndex << std::endl;
         exit(16 + actionIndex);
     }
 
-    void toastDismissed(WinToastDismissalReason state) const {
+    void toastDismissed(WinToastDismissalReason state) const override {
         switch (state) {
         case WinToastDismissalReason::UserCanceled:
             std::wcout << L"The user dismissed this toast" << std::endl;
@@ -36,7 +36,7 @@ public:
         }
     }
 
-    void toastFailed() const {
+    void toastFailed() const override {
         std::wcout << L"Error showing current toast" << std::endl;
         exit(5);
     }
@@ -122,15 +122,15 @@ int wmain(int argc, LPWSTR *argv)
             appName = argv[++i];
         else if (!wcscmp(COMMAND_AUMI, argv[i]) || !wcscmp(COMMAND_APPID, argv[i]))
             appUserModelID = argv[++i];
-		else if (!wcscmp(COMMAND_TEXT, argv[i]))
+        else if (!wcscmp(COMMAND_TEXT, argv[i]))
 			text = argv[++i];
         else if (!wcscmp(COMMAND_ATTRIBUTE, argv[i]))
             attribute = argv[++i];
-		else if (!wcscmp(COMMAND_SHORTCUT, argv[i]))
+        else if (!wcscmp(COMMAND_SHORTCUT, argv[i]))
 			onlyCreateShortcut = true;
         else if (!wcscmp(COMMAND_AUDIOSTATE, argv[i]))
             audioOption = static_cast<WinToastTemplate::AudioOption>(std::stoi(argv[++i]));
-		else if (!wcscmp(COMMAND_HELP, argv[i])) {
+        else if (!wcscmp(COMMAND_HELP, argv[i])) {
 			print_help();
 			return 0;
 		} else {
