@@ -912,9 +912,9 @@ HRESULT WinToast::setImageFieldHelper(_In_ IXmlDocument *xml, _In_ const std::ws
 
 HRESULT WinToast::setAudioFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& path, _In_opt_ WinToastTemplate::AudioOption option) {
     std::vector<std::wstring> attrs;
-    if (!path.empty()) attrs.push_back(L"src");
-    if (option == WinToastTemplate::AudioOption::Loop) attrs.push_back(L"loop");
-    if (option == WinToastTemplate::AudioOption::Silent) attrs.push_back(L"silent");
+    if (!path.empty()) attrs.emplace_back(L"src");
+    if (option == WinToastTemplate::AudioOption::Loop) attrs.emplace_back(L"loop");
+    if (option == WinToastTemplate::AudioOption::Silent) attrs.emplace_back(L"silent");
     Util::createElement(xml, L"toast", L"audio", attrs);
 
     ComPtr<IXmlNodeList> nodeList;

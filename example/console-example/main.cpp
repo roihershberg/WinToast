@@ -115,7 +115,7 @@ int wmain(int argc, LPWSTR *argv)
         if (!wcscmp(COMMAND_IMAGE, argv[i]))
             imagePath = argv[++i];
         else if (!wcscmp(COMMAND_ACTION, argv[i]))
-            actions.push_back(argv[++i]);
+            actions.emplace_back(argv[++i]);
         else if (!wcscmp(COMMAND_EXPIREMS, argv[i]))
             expiration = wcstol(argv[++i], nullptr, 10);
         else if (!wcscmp(COMMAND_APPNAME, argv[i]))
