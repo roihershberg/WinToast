@@ -449,12 +449,12 @@ const std::wstring& WinToast::strerror(WinToastError error) {
 enum WinToast::ShortcutResult WinToast::createShortcut() {
     if (_aumi.empty() || _appName.empty()) {
         DEBUG_MSG(L"Error: App User Model Id or Appname is empty!");
-        return SHORTCUT_MISSING_PARAMETERS;
+        return ShortcutResult::SHORTCUT_MISSING_PARAMETERS;
     }
 
     if (!isCompatible()) {
         DEBUG_MSG(L"Your OS is not compatible with this library! =(");
-        return SHORTCUT_INCOMPATIBLE_OS;
+        return ShortcutResult::SHORTCUT_INCOMPATIBLE_OS;
     }
 
     if (!_hasCoInitialized) {
@@ -462,7 +462,7 @@ enum WinToast::ShortcutResult WinToast::createShortcut() {
         if (initHr != RPC_E_CHANGED_MODE) {
             if (FAILED(initHr) && initHr != S_FALSE) {
                 DEBUG_MSG(L"Error on COM library initialization!");
-                return SHORTCUT_COM_INIT_FAILURE;
+                return ShortcutResult::SHORTCUT_COM_INIT_FAILURE;
             }
             else {
                 _hasCoInitialized = true;
@@ -473,10 +473,10 @@ enum WinToast::ShortcutResult WinToast::createShortcut() {
     bool wasChanged;
     HRESULT hr = validateShellLinkHelper(wasChanged);
     if (SUCCEEDED(hr))
-        return wasChanged ? SHORTCUT_WAS_CHANGED : SHORTCUT_UNCHANGED;
+        return wasChanged ? ShortcutResult::SHORTCUT_WAS_CHANGED : ShortcutResult::SHORTCUT_UNCHANGED;
 
     hr = createShellLinkHelper();
-    return SUCCEEDED(hr) ? SHORTCUT_WAS_CREATED : SHORTCUT_CREATE_FAILED;
+    return SUCCEEDED(hr) ? ShortcutResult::SHORTCUT_WAS_CREATED : ShortcutResult::SHORTCUT_CREATE_FAILED;
 }
 
 bool WinToast::initialize(_Out_opt_ WinToastError* error) {
@@ -496,8 +496,8 @@ bool WinToast::initialize(_Out_opt_ WinToastError* error) {
         return false;
     }
 
-    if (_shortcutPolicy != SHORTCUT_POLICY_IGNORE) {
-        if (createShortcut() < 0) {
+    if (_shortcutPolicy != ShortcutPolicy::SHORTCUT_POLICY_IGNORE) {
+        if ((int) createShortcut() < 0) {
             setError(error, WinToastError::ShellLinkNotCreated);
             DEBUG_MSG(L"Error while attaching the AUMI to the current proccess =(");
             return false;
@@ -561,7 +561,7 @@ HRESULT	WinToast::validateShellLinkHelper(_Out_ bool& wasChanged) {
                         hr = DllImporter::PropVariantToString(appIdPropVar, AUMI, MAX_PATH);
                         wasChanged = false;
                         if (FAILED(hr) || _aumi != AUMI) {
-                            if (_shortcutPolicy == SHORTCUT_POLICY_REQUIRE_CREATE) {
+                            if (_shortcutPolicy == ShortcutPolicy::SHORTCUT_POLICY_REQUIRE_CREATE) {
                                 // AUMI Changed for the same app, let's update the current value! =)
                                 wasChanged = true;
                                 PropVariantClear(&appIdPropVar);
@@ -592,7 +592,7 @@ HRESULT	WinToast::validateShellLinkHelper(_Out_ bool& wasChanged) {
 
 
 HRESULT	WinToast::createShellLinkHelper() {
-    if (_shortcutPolicy != SHORTCUT_POLICY_REQUIRE_CREATE) {
+    if (_shortcutPolicy != ShortcutPolicy::SHORTCUT_POLICY_REQUIRE_CREATE) {
       return E_FAIL;
     }
 
@@ -1027,7 +1027,7 @@ void WinToast::setError(_Out_opt_ WinToastError* error, _In_ WinToastError value
 
 WinToastTemplate::WinToastTemplate(_In_ WinToastTemplateType type) : _type(type) {
     static constexpr std::size_t TextFieldsCount[] = { 1, 2, 2, 3, 1, 2, 2, 3};
-    _textFields = std::vector<std::wstring>(TextFieldsCount[type], L"");
+    _textFields = std::vector<std::wstring>(TextFieldsCount[(int) type], L"");
 }
 
 WinToastTemplate::~WinToastTemplate() {
@@ -1087,15 +1087,15 @@ void WinToastTemplate::setAudioOption(_In_ WinToastTemplate::AudioOption audioOp
 }
 
 void WinToastTemplate::setFirstLine(_In_ const std::wstring &text) {
-    setTextField(text, WinToastTemplate::FirstLine);
+    setTextField(text, WinToastTemplate::TextField::FirstLine);
 }
 
 void WinToastTemplate::setSecondLine(_In_ const std::wstring &text) {
-    setTextField(text, WinToastTemplate::SecondLine);
+    setTextField(text, WinToastTemplate::TextField::SecondLine);
 }
 
 void WinToastTemplate::setThirdLine(_In_ const std::wstring &text) {
-    setTextField(text, WinToastTemplate::ThirdLine);
+    setTextField(text, WinToastTemplate::TextField::ThirdLine);
 }
 
 void WinToastTemplate::setDuration(_In_ Duration duration) {

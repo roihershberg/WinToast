@@ -17,15 +17,15 @@ public:
 
     void toastDismissed(WinToastDismissalReason state) const {
         switch (state) {
-        case UserCanceled:
+        case WinToastDismissalReason::UserCanceled:
             std::wcout << L"The user dismissed this toast" << std::endl;
             exit(1);
             break;
-        case TimedOut:
+        case WinToastDismissalReason::TimedOut:
             std::wcout << L"The toast has timed out" << std::endl;
             exit(2);
             break;
-        case ApplicationHidden:
+        case WinToastDismissalReason::ApplicationHidden:
             std::wcout << L"The application hid the toast using ToastNotifier.hide()" << std::endl;
             exit(3);
             break;
@@ -146,8 +146,8 @@ int wmain(int argc, LPWSTR *argv)
             std::wcerr << L"--only-create-shortcut does not accept images/text/actions/expiration" << std::endl;
             return 9;
         }
-        enum WinToast::ShortcutResult result = WinToast::instance()->createShortcut();
-        return result ? 16 + result : 0;
+        WinToast::ShortcutResult result = WinToast::instance()->createShortcut();
+        return (int) result ? 16 + (int) result : 0;
     }
 
     if (!text)
@@ -159,8 +159,8 @@ int wmain(int argc, LPWSTR *argv)
     }
 
     bool withImage = (imagePath != NULL);
-	WinToastTemplate templ( withImage ? WinToastTemplate::ImageAndText02 : WinToastTemplate::Text02);
-	templ.setTextField(text, WinToastTemplate::FirstLine);
+	WinToastTemplate templ( withImage ? WinToastTemplate::WinToastTemplateType::ImageAndText02 : WinToastTemplate::WinToastTemplateType::Text02);
+	templ.setTextField(text, WinToastTemplate::TextField::FirstLine);
     templ.setAudioOption(audioOption);
     templ.setAttributionText(attribute);
 
