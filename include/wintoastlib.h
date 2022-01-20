@@ -20,6 +20,7 @@
 
 #ifndef WINTOASTLIB_H
 #define WINTOASTLIB_H
+
 #include <Windows.h>
 #include <sdkddkver.h>
 #include <WinUser.h>
@@ -38,6 +39,7 @@
 #include <cstring>
 #include <vector>
 #include <map>
+
 using namespace Microsoft::WRL;
 using namespace ABI::Windows::Data::Xml::Dom;
 using namespace ABI::Windows::Foundation;
@@ -54,19 +56,32 @@ namespace WinToastLib {
             ApplicationHidden = ToastDismissalReason::ToastDismissalReason_ApplicationHidden,
             TimedOut = ToastDismissalReason::ToastDismissalReason_TimedOut
         };
+
         virtual ~IWinToastHandler() = default;
+
         virtual void toastActivated() const = 0;
+
         virtual void toastActivated(int actionIndex) const = 0;
+
         virtual void toastDismissed(WinToastDismissalReason state) const = 0;
+
         virtual void toastFailed() const = 0;
     };
 
     class WinToastTemplate {
     public:
-        enum class Scenario { Default, Alarm, IncomingCall, Reminder };
-        enum class Duration { System, Short, Long };
-        enum class AudioOption { Default = 0, Silent, Loop };
-        enum class TextField { FirstLine = 0, SecondLine, ThirdLine };
+        enum class Scenario {
+            Default, Alarm, IncomingCall, Reminder
+        };
+        enum class Duration {
+            System, Short, Long
+        };
+        enum class AudioOption {
+            Default = 0, Silent, Loop
+        };
+        enum class TextField {
+            FirstLine = 0, SecondLine, ThirdLine
+        };
         enum class WinToastTemplateType {
             ImageAndText01 = ToastTemplateType::ToastTemplateType_ToastImageAndText01,
             ImageAndText02 = ToastTemplateType::ToastTemplateType_ToastImageAndText02,
@@ -109,47 +124,74 @@ namespace WinToastLib {
 
 
         WinToastTemplate(_In_ WinToastTemplateType type = WinToastTemplateType::ImageAndText02);
+
         ~WinToastTemplate();
 
-        void setFirstLine(_In_ const std::wstring& text);
-        void setSecondLine(_In_ const std::wstring& text);
-        void setThirdLine(_In_ const std::wstring& text);
-        void setTextField(_In_ const std::wstring& txt, _In_ TextField pos);
-        void setAttributionText(_In_ const std::wstring& attributionText);
-        void setImagePath(_In_ const std::wstring& imgPath);
+        void setFirstLine(_In_ const std::wstring &text);
+
+        void setSecondLine(_In_ const std::wstring &text);
+
+        void setThirdLine(_In_ const std::wstring &text);
+
+        void setTextField(_In_ const std::wstring &txt, _In_ TextField pos);
+
+        void setAttributionText(_In_ const std::wstring &attributionText);
+
+        void setImagePath(_In_ const std::wstring &imgPath);
+
         void setAudioPath(_In_ WinToastTemplate::AudioSystemFile audio);
-        void setAudioPath(_In_ const std::wstring& audioPath);
+
+        void setAudioPath(_In_ const std::wstring &audioPath);
+
         void setAudioOption(_In_ WinToastTemplate::AudioOption audioOption);
+
         void setDuration(_In_ Duration duration);
+
         void setExpiration(_In_ INT64 millisecondsFromNow);
+
         void setScenario(_In_ Scenario scenario);
-        void addAction(_In_ const std::wstring& label);
+
+        void addAction(_In_ const std::wstring &label);
 
         std::size_t textFieldsCount() const;
+
         std::size_t actionsCount() const;
+
         bool hasImage() const;
-        const std::vector<std::wstring>& textFields() const;
-        const std::wstring& textField(_In_ TextField pos) const;
-        const std::wstring& actionLabel(_In_ std::size_t pos) const;
-        const std::wstring& imagePath() const;
-        const std::wstring& audioPath() const;
-        const std::wstring& attributionText() const;
-        const std::wstring& scenario() const;
+
+        const std::vector<std::wstring> &textFields() const;
+
+        const std::wstring &textField(_In_ TextField pos) const;
+
+        const std::wstring &actionLabel(_In_ std::size_t pos) const;
+
+        const std::wstring &imagePath() const;
+
+        const std::wstring &audioPath() const;
+
+        const std::wstring &attributionText() const;
+
+        const std::wstring &scenario() const;
+
         INT64 expiration() const;
+
         WinToastTemplateType type() const;
+
         WinToastTemplate::AudioOption audioOption() const;
+
         Duration duration() const;
+
     private:
-        std::vector<std::wstring>           _textFields{};
-        std::vector<std::wstring>           _actions{};
-        std::wstring                        _imagePath{};
-        std::wstring                        _audioPath{};
-        std::wstring                        _attributionText{};
-        std::wstring                        _scenario{L"Default"};
-        INT64                               _expiration{0};
-        AudioOption                         _audioOption{WinToastTemplate::AudioOption::Default};
-        WinToastTemplateType                _type{WinToastTemplateType::Text01};
-        Duration                            _duration{Duration::System};
+        std::vector<std::wstring> _textFields{};
+        std::vector<std::wstring> _actions{};
+        std::wstring _imagePath{};
+        std::wstring _audioPath{};
+        std::wstring _attributionText{};
+        std::wstring _scenario{L"Default"};
+        INT64 _expiration{0};
+        AudioOption _audioOption{WinToastTemplate::AudioOption::Default};
+        WinToastTemplateType _type{WinToastTemplateType::Text01};
+        Duration _duration{Duration::System};
     };
 
     class WinToast {
@@ -188,47 +230,76 @@ namespace WinToastLib {
         };
 
         WinToast(void);
+
         virtual ~WinToast();
-        static WinToast* instance();
+
+        static WinToast *instance();
+
         static bool isCompatible();
+
         static bool isSupportingModernFeatures();
-        static std::wstring configureAUMI(_In_ const std::wstring& companyName,
-                                          _In_ const std::wstring& productName,
-                                          _In_ const std::wstring& subProduct = std::wstring(),
-                                          _In_ const std::wstring& versionInformation = std::wstring());
-        static const std::wstring& strerror(_In_ WinToastError error);
-        virtual bool initialize(_Out_opt_ WinToastError* error = nullptr);
+
+        static std::wstring configureAUMI(_In_ const std::wstring &companyName,
+                                          _In_ const std::wstring &productName,
+                                          _In_ const std::wstring &subProduct = std::wstring(),
+                                          _In_ const std::wstring &versionInformation = std::wstring());
+
+        static const std::wstring &strerror(_In_ WinToastError error);
+
+        virtual bool initialize(_Out_opt_ WinToastError *error = nullptr);
+
         virtual bool isInitialized() const;
+
         virtual bool hideToast(_In_ INT64 id);
-        virtual INT64 showToast(_In_ const WinToastTemplate& toast, _In_ IWinToastHandler* handler, _Out_opt_ WinToastError* error = nullptr);
+
+        virtual INT64 showToast(_In_ const WinToastTemplate &toast, _In_ IWinToastHandler *handler, _Out_opt_
+                                WinToastError *error = nullptr);
+
         virtual void clear();
+
         virtual ShortcutResult createShortcut();
 
-        const std::wstring& appName() const;
-        const std::wstring& appUserModelId() const;
-        void setAppUserModelId(_In_ const std::wstring& aumi);
-        void setAppName(_In_ const std::wstring& appName);
+        const std::wstring &appName() const;
+
+        const std::wstring &appUserModelId() const;
+
+        void setAppUserModelId(_In_ const std::wstring &aumi);
+
+        void setAppName(_In_ const std::wstring &appName);
+
         void setShortcutPolicy(_In_ ShortcutPolicy policy);
 
     protected:
-        bool                                            _isInitialized{false};
-        bool                                            _hasCoInitialized{false};
-        ShortcutPolicy                                  _shortcutPolicy{ShortcutPolicy::SHORTCUT_POLICY_REQUIRE_CREATE};
-        std::wstring                                    _appName{};
-        std::wstring                                    _aumi{};
-        std::map<INT64, ComPtr<IToastNotification>>     _buffer{};
+        bool _isInitialized{false};
+        bool _hasCoInitialized{false};
+        ShortcutPolicy _shortcutPolicy{ShortcutPolicy::SHORTCUT_POLICY_REQUIRE_CREATE};
+        std::wstring _appName{};
+        std::wstring _aumi{};
+        std::map<INT64, ComPtr<IToastNotification>> _buffer{};
 
-        HRESULT validateShellLinkHelper(_Out_ bool& wasChanged);
+        HRESULT validateShellLinkHelper(_Out_ bool &wasChanged);
+
         HRESULT createShellLinkHelper();
-        HRESULT setImageFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& path);
-        HRESULT setAudioFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& path, _In_opt_ WinToastTemplate::AudioOption option = WinToastTemplate::AudioOption::Default);
-        HRESULT setTextFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& text, _In_ UINT32 pos);
-        HRESULT setAttributionTextFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& text);
-        HRESULT addActionHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& action, _In_ const std::wstring& arguments);
-        HRESULT addDurationHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& duration);
-        HRESULT addScenarioHelper(_In_ IXmlDocument *xml, _In_ const std::wstring& scenario);
-        ComPtr<IToastNotifier> notifier(_In_ bool* succeded) const;
-        void setError(_Out_opt_ WinToastError* error, _In_ WinToastError value);
+
+        HRESULT setImageFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &path);
+
+        HRESULT setAudioFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &path, _In_opt_
+                                    WinToastTemplate::AudioOption option = WinToastTemplate::AudioOption::Default);
+
+        HRESULT setTextFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &text, _In_ UINT32 pos);
+
+        HRESULT setAttributionTextFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &text);
+
+        HRESULT
+        addActionHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &action, _In_ const std::wstring &arguments);
+
+        HRESULT addDurationHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &duration);
+
+        HRESULT addScenarioHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &scenario);
+
+        ComPtr<IToastNotifier> notifier(_In_ bool *succeded) const;
+
+        void setError(_Out_opt_ WinToastError *error, _In_ WinToastError value);
     };
 }
 #endif // WINTOASTLIB_H
