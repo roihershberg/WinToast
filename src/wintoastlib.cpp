@@ -28,9 +28,9 @@
 #pragma comment(lib,"user32")
 
 #ifdef NDEBUG
-    #define DEBUG_MSG(str) do { } while ( false )
+    #define DEBUG_MSG(str)
 #else
-    #define DEBUG_MSG(str) do { std::wcout << str << std::endl; } while( false )
+    #define DEBUG_MSG(str) std::wcout << str << std::endl
 #endif
 
 #define DEFAULT_SHELL_LINKS_PATH	L"\\Microsoft\\Windows\\Start Menu\\Programs\\"
