@@ -98,10 +98,10 @@ int wmain(int argc, LPWSTR *argv)
         return Results::SystemNotSupported;
     }
 
-    LPWSTR appName = L"Console WinToast Example",
+    std::wstring appName = L"Console WinToast Example",
         appUserModelID = L"WinToast Console Example",
-        text = nullptr,
-        imagePath = nullptr,
+        text,
+        imagePath,
         attribute = L"default";
     std::vector<std::wstring> actions;
     INT64 expiration = 0;
@@ -142,7 +142,7 @@ int wmain(int argc, LPWSTR *argv)
     WinToast::instance()->setAppUserModelId(appUserModelID);
 
     if (onlyCreateShortcut) {
-        if (imagePath || text || !actions.empty() || expiration) {
+        if (!imagePath.empty() || !text.empty() || !actions.empty() || expiration) {
             std::wcerr << L"--only-create-shortcut does not accept images/text/actions/expiration" << std::endl;
             return 9;
         }
@@ -150,7 +150,7 @@ int wmain(int argc, LPWSTR *argv)
         return (int) result ? 16 + (int) result : 0;
     }
 
-    if (!text)
+    if (text.empty())
         text = L"Hello, world!";
 
     if (!WinToast::instance()->initialize()) {
@@ -158,7 +158,7 @@ int wmain(int argc, LPWSTR *argv)
         return Results::InitializationFailure;
     }
 
-    bool withImage = (imagePath != nullptr);
+    bool withImage = !(imagePath.empty());
 	WinToastTemplate templ( withImage ? WinToastTemplate::WinToastTemplateType::ImageAndText02 : WinToastTemplate::WinToastTemplateType::Text02);
 	templ.setTextField(text, WinToastTemplate::TextField::FirstLine);
     templ.setAudioOption(audioOption);
