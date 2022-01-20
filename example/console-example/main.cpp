@@ -100,8 +100,8 @@ int wmain(int argc, LPWSTR *argv)
 
     LPWSTR appName = L"Console WinToast Example",
         appUserModelID = L"WinToast Console Example",
-        text = NULL,
-        imagePath = NULL,
+        text = nullptr,
+        imagePath = nullptr,
         attribute = L"default";
     std::vector<std::wstring> actions;
     INT64 expiration = 0;
@@ -117,7 +117,7 @@ int wmain(int argc, LPWSTR *argv)
         else if (!wcscmp(COMMAND_ACTION, argv[i]))
             actions.push_back(argv[++i]);
         else if (!wcscmp(COMMAND_EXPIREMS, argv[i]))
-            expiration = wcstol(argv[++i], NULL, 10);
+            expiration = wcstol(argv[++i], nullptr, 10);
         else if (!wcscmp(COMMAND_APPNAME, argv[i]))
             appName = argv[++i];
         else if (!wcscmp(COMMAND_AUMI, argv[i]) || !wcscmp(COMMAND_APPID, argv[i]))
@@ -158,7 +158,7 @@ int wmain(int argc, LPWSTR *argv)
         return Results::InitializationFailure;
     }
 
-    bool withImage = (imagePath != NULL);
+    bool withImage = (imagePath != nullptr);
 	WinToastTemplate templ( withImage ? WinToastTemplate::WinToastTemplateType::ImageAndText02 : WinToastTemplate::WinToastTemplateType::Text02);
 	templ.setTextField(text, WinToastTemplate::TextField::FirstLine);
     templ.setAudioOption(audioOption);
