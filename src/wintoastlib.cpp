@@ -264,7 +264,7 @@ namespace Util {
         return hr;
     }
 
-    inline HRESULT setEventHandlers(_In_ IToastNotification* notification, _In_ std::shared_ptr<IWinToastHandler> eventHandler, _In_ INT64 expirationTime) {
+    inline HRESULT setEventHandlers(_In_ IToastNotification* notification, _In_ const std::shared_ptr<IWinToastHandler>& eventHandler, _In_ INT64 expirationTime) {
         EventRegistrationToken activatedToken, dismissedToken, failedToken;
         HRESULT hr = notification->add_Activated(
                     Callback < Implements < RuntimeClassFlags<ClassicCom>,
