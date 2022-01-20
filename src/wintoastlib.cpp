@@ -121,8 +121,8 @@ public:
         return _hstring;
     }
 private:
-    HSTRING _hstring;
-    HSTRING_HEADER _header;
+    HSTRING _hstring{};
+    HSTRING_HEADER _header{};
 
 };
 
@@ -676,7 +676,7 @@ INT64 WinToast::showToast(_In_ const WinToastTemplate& toast, _In_  IWinToastHan
                             hr = setAttributionTextFieldHelper(xmlDocument.Get(), toast.attributionText());
                         }
 
-                        std::array<WCHAR, 12> buf;
+                        std::array<WCHAR, 12> buf{};
                         for (std::size_t i = 0, actionsCount = toast.actionsCount(); i < actionsCount && SUCCEEDED(hr); i++) {
                             _snwprintf_s(buf.data(), buf.size(), _TRUNCATE, L"%zd", i);
                             hr = addActionHelper(xmlDocument.Get(), toast.actionLabel(i), buf.data());
