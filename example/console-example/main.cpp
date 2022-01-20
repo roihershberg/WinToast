@@ -142,7 +142,7 @@ int wmain(int argc, LPWSTR *argv)
     WinToast::instance()->setAppUserModelId(appUserModelID);
 
     if (onlyCreateShortcut) {
-        if (imagePath || text || actions.size() > 0 || expiration) {
+        if (imagePath || text || !actions.empty() || expiration) {
             std::wcerr << L"--only-create-shortcut does not accept images/text/actions/expiration" << std::endl;
             return 9;
         }
