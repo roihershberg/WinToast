@@ -172,8 +172,8 @@ int wmain(int argc, LPWSTR *argv) {
     if (withImage)
         templ.setImagePath(imagePath);
 
-
-    if (WinToast::instance()->showToast(templ, new CustomHandler()) < 0) {
+    std::unique_ptr<CustomHandler> customHandler = std::make_unique<CustomHandler>();
+    if (WinToast::instance()->showToast(templ, customHandler.get()) < 0) {
         std::wcerr << L"Could not launch your toast notification!";
         return Results::ToastFailed;
     }
@@ -181,5 +181,5 @@ int wmain(int argc, LPWSTR *argv) {
     // Give the handler a chance for 15 seconds (or the expiration plus 1 second)
     Sleep(expiration ? (DWORD) expiration + 1000 : 15000);
 
-    exit(2);
+    return 2;
 }
