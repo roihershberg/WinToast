@@ -26,7 +26,7 @@
 #include <array>
 
 #include "dll_importer.h"
-#include "wintoaststringwrapper.h"
+#include "wintoast_string_wrapper.h"
 
 #pragma comment(lib, "shlwapi")
 #pragma comment(lib, "user32")

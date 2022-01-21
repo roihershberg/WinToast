@@ -41,16 +41,16 @@ namespace DllImporter {
     typedef HRESULT(FAR STDAPICALLTYPE *f_SetCurrentProcessExplicitAppUserModelID)(__in PCWSTR AppID);
 
     typedef HRESULT(FAR STDAPICALLTYPE *f_PropVariantToString)(_In_ REFPROPVARIANT propvar, _Out_writes_(cch) PWSTR psz,
-            _In_ UINT cch);
+                                                               _In_ UINT cch);
 
     typedef HRESULT(FAR STDAPICALLTYPE *f_RoGetActivationFactory)(_In_ HSTRING activatableClassId, _In_ REFIID iid,
-    _COM_Outptr_ void **factory);
+                                                                  _COM_Outptr_ void **factory);
 
     typedef HRESULT(FAR STDAPICALLTYPE *f_WindowsCreateStringReference)(_In_reads_opt_(length + 1) PCWSTR sourceString,
-            UINT32 length, _Out_
-            HSTRING_HEADER *hstringHeader,
-    _Outptr_result_maybenull_ _Result_nullonfailure_
-    HSTRING *string);
+                                                                        UINT32 length, _Out_
+                                                                        HSTRING_HEADER *hstringHeader,
+                                                                        _Outptr_result_maybenull_ _Result_nullonfailure_
+                                                                        HSTRING *string);
 
     typedef PCWSTR(FAR STDAPICALLTYPE *f_WindowsGetStringRawBuffer)(_In_ HSTRING string, _Out_opt_ UINT32 *length);
 
@@ -66,36 +66,36 @@ namespace DllImporter {
 
     template<class T>
     _Check_return_ __inline HRESULT _1_GetActivationFactory(_In_ HSTRING activatableClassId, _COM_Outptr_ T **factory) {
-    return RoGetActivationFactory(activatableClassId, IID_INS_ARGS(factory));
-}
-
-template<typename T>
-inline HRESULT
-Wrap_GetActivationFactory(_In_ HSTRING activatableClassId, _Inout_ Details::ComPtrRef<T> factory) noexcept {
-    return _1_GetActivationFactory(activatableClassId, factory.ReleaseAndGetAddressOf());
-}
-
-inline HRESULT initialize() {
-    HINSTANCE LibShell32 = LoadLibraryW(L"SHELL32.DLL");
-    HRESULT hr = loadFunctionFromLibrary(LibShell32, "SetCurrentProcessExplicitAppUserModelID",
-                                         SetCurrentProcessExplicitAppUserModelID);
-    if (SUCCEEDED(hr)) {
-        HINSTANCE LibPropSys = LoadLibraryW(L"PROPSYS.DLL");
-        hr = loadFunctionFromLibrary(LibPropSys, "PropVariantToString", PropVariantToString);
-        if (SUCCEEDED(hr)) {
-            HINSTANCE LibComBase = LoadLibraryW(L"COMBASE.DLL");
-            const bool succeded =
-                    SUCCEEDED(loadFunctionFromLibrary(LibComBase, "RoGetActivationFactory", RoGetActivationFactory))
-                    && SUCCEEDED(loadFunctionFromLibrary(LibComBase, "WindowsCreateStringReference",
-                                                         WindowsCreateStringReference))
-                    && SUCCEEDED(loadFunctionFromLibrary(LibComBase, "WindowsGetStringRawBuffer",
-                                                         WindowsGetStringRawBuffer))
-                    && SUCCEEDED(loadFunctionFromLibrary(LibComBase, "WindowsDeleteString", WindowsDeleteString));
-            return succeded ? S_OK : E_FAIL;
-        }
+        return RoGetActivationFactory(activatableClassId, IID_INS_ARGS(factory));
     }
-    return hr;
-}
+
+    template<typename T>
+    inline HRESULT
+    Wrap_GetActivationFactory(_In_ HSTRING activatableClassId, _Inout_ Details::ComPtrRef<T> factory) noexcept {
+        return _1_GetActivationFactory(activatableClassId, factory.ReleaseAndGetAddressOf());
+    }
+
+    inline HRESULT initialize() {
+        HINSTANCE LibShell32 = LoadLibraryW(L"SHELL32.DLL");
+        HRESULT hr = loadFunctionFromLibrary(LibShell32, "SetCurrentProcessExplicitAppUserModelID",
+                                             SetCurrentProcessExplicitAppUserModelID);
+        if (SUCCEEDED(hr)) {
+            HINSTANCE LibPropSys = LoadLibraryW(L"PROPSYS.DLL");
+            hr = loadFunctionFromLibrary(LibPropSys, "PropVariantToString", PropVariantToString);
+            if (SUCCEEDED(hr)) {
+                HINSTANCE LibComBase = LoadLibraryW(L"COMBASE.DLL");
+                const bool succeded =
+                        SUCCEEDED(loadFunctionFromLibrary(LibComBase, "RoGetActivationFactory", RoGetActivationFactory))
+                        && SUCCEEDED(loadFunctionFromLibrary(LibComBase, "WindowsCreateStringReference",
+                                                             WindowsCreateStringReference))
+                        && SUCCEEDED(loadFunctionFromLibrary(LibComBase, "WindowsGetStringRawBuffer",
+                                                             WindowsGetStringRawBuffer))
+                        && SUCCEEDED(loadFunctionFromLibrary(LibComBase, "WindowsDeleteString", WindowsDeleteString));
+                return succeded ? S_OK : E_FAIL;
+            }
+        }
+        return hr;
+    }
 }
 
 #endif //WINTOAST_DLL_IMPORTER_H

@@ -38,7 +38,8 @@ public:
 
     WinToastStringWrapper(_In_ const std::wstring &stringRef) noexcept {
         HRESULT hr = DllImporter::WindowsCreateStringReference(stringRef.c_str(),
-                                                               static_cast<UINT32>(stringRef.length()), &_header,
+                                                               static_cast<UINT32>(stringRef.length()),
+                                                               &_header,
                                                                &_hstring);
         if (FAILED(hr)) {
             RaiseException(static_cast<DWORD>(STATUS_INVALID_PARAMETER), EXCEPTION_NONCONTINUABLE, 0, nullptr);
