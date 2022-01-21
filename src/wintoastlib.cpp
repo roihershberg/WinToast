@@ -26,6 +26,7 @@
 #include <array>
 
 #include "dll_importer.h"
+#include "wintoaststringwrapper.h"
 
 #pragma comment(lib, "shlwapi")
 #pragma comment(lib, "user32")
@@ -44,38 +45,6 @@
 // Quickstart: Handling toast activations from Win32 apps in Windows 10
 // https://blogs.msdn.microsoft.com/tiles_and_toasts/2015/10/16/quickstart-handling-toast-activations-from-win32-apps-in-windows-10/
 using namespace WinToastLib;
-
-class WinToastStringWrapper {
-public:
-    WinToastStringWrapper(_In_reads_(length) PCWSTR stringRef, _In_ UINT32 length) noexcept {
-        HRESULT hr = DllImporter::WindowsCreateStringReference(stringRef, length, &_header, &_hstring);
-        if (!SUCCEEDED(hr)) {
-            RaiseException(static_cast<DWORD>(STATUS_INVALID_PARAMETER), EXCEPTION_NONCONTINUABLE, 0, nullptr);
-        }
-    }
-
-    WinToastStringWrapper(_In_ const std::wstring &stringRef) noexcept {
-        HRESULT hr = DllImporter::WindowsCreateStringReference(stringRef.c_str(),
-                                                               static_cast<UINT32>(stringRef.length()), &_header,
-                                                               &_hstring);
-        if (FAILED(hr)) {
-            RaiseException(static_cast<DWORD>(STATUS_INVALID_PARAMETER), EXCEPTION_NONCONTINUABLE, 0, nullptr);
-        }
-    }
-
-    ~WinToastStringWrapper() {
-        DllImporter::WindowsDeleteString(_hstring);
-    }
-
-    inline HSTRING Get() const noexcept {
-        return _hstring;
-    }
-
-private:
-    HSTRING _hstring{};
-    HSTRING_HEADER _header{};
-
-};
 
 class InternalDateTime : public IReference<DateTime> {
 public:
