@@ -337,11 +337,11 @@ namespace Util {
     }
 
     inline HRESULT addAttribute(_In_ IXmlDocument *xml, const std::wstring &name, IXmlNamedNodeMap *attributeMap) {
-        ComPtr<ABI::Windows::Data::Xml::Dom::IXmlAttribute> srcAttribute;
-        HRESULT hr = xml->CreateAttribute(WinToastStringWrapper(name).Get(), &srcAttribute);
+        ComPtr<ABI::Windows::Data::Xml::Dom::IXmlAttribute> attribute;
+        HRESULT hr = xml->CreateAttribute(WinToastStringWrapper(name).Get(), &attribute);
         if (SUCCEEDED(hr)) {
             ComPtr<IXmlNode> node;
-            hr = srcAttribute.As(&node);
+            hr = attribute.As(&node);
             if (SUCCEEDED(hr)) {
                 ComPtr<IXmlNode> pNode;
                 hr = attributeMap->SetNamedItem(node.Get(), &pNode);
@@ -359,17 +359,17 @@ namespace Util {
             ComPtr<IXmlNode> root;
             hr = rootList->Item(0, &root);
             if (SUCCEEDED(hr)) {
-                ComPtr<ABI::Windows::Data::Xml::Dom::IXmlElement> audioElement;
-                hr = xml->CreateElement(WinToastStringWrapper(element_name).Get(), &audioElement);
+                ComPtr<ABI::Windows::Data::Xml::Dom::IXmlElement> element;
+                hr = xml->CreateElement(WinToastStringWrapper(element_name).Get(), &element);
                 if (SUCCEEDED(hr)) {
-                    ComPtr<IXmlNode> audioNodeTmp;
-                    hr = audioElement.As(&audioNodeTmp);
+                    ComPtr<IXmlNode> nodeTmp;
+                    hr = element.As(&nodeTmp);
                     if (SUCCEEDED(hr)) {
-                        ComPtr<IXmlNode> audioNode;
-                        hr = root->AppendChild(audioNodeTmp.Get(), &audioNode);
+                        ComPtr<IXmlNode> node;
+                        hr = root->AppendChild(nodeTmp.Get(), &node);
                         if (SUCCEEDED(hr)) {
                             ComPtr<IXmlNamedNodeMap> attributes;
-                            hr = audioNode->get_Attributes(&attributes);
+                            hr = node->get_Attributes(&attributes);
                             if (SUCCEEDED(hr)) {
                                 for (const auto &it: attribute_names) {
                                     hr = addAttribute(xml, it, attributes.Get());
