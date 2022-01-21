@@ -19,10 +19,13 @@
  */
 
 #include "wintoastlib.h"
+
 #include <memory>
 #include <cassert>
 #include <unordered_map>
 #include <array>
+
+#include "dll_importer.h"
 
 #pragma comment(lib, "shlwapi")
 #pragma comment(lib, "user32")
@@ -41,77 +44,6 @@
 // Quickstart: Handling toast activations from Win32 apps in Windows 10
 // https://blogs.msdn.microsoft.com/tiles_and_toasts/2015/10/16/quickstart-handling-toast-activations-from-win32-apps-in-windows-10/
 using namespace WinToastLib;
-namespace DllImporter {
-
-    // Function load a function from library
-    template<typename Function>
-    HRESULT loadFunctionFromLibrary(HINSTANCE library, LPCSTR name, Function &func) {
-        if (!library) {
-            return E_INVALIDARG;
-        }
-        func = reinterpret_cast<Function>(GetProcAddress(library, name));
-        return (func != nullptr) ? S_OK : E_FAIL;
-    }
-
-    typedef HRESULT(FAR STDAPICALLTYPE *f_SetCurrentProcessExplicitAppUserModelID)(__in PCWSTR AppID);
-
-    typedef HRESULT(FAR STDAPICALLTYPE *f_PropVariantToString)(_In_ REFPROPVARIANT propvar, _Out_writes_(cch) PWSTR psz,
-                                                               _In_ UINT cch);
-
-    typedef HRESULT(FAR STDAPICALLTYPE *f_RoGetActivationFactory)(_In_ HSTRING activatableClassId, _In_ REFIID iid,
-                                                                  _COM_Outptr_ void **factory);
-
-    typedef HRESULT(FAR STDAPICALLTYPE *f_WindowsCreateStringReference)(_In_reads_opt_(length + 1) PCWSTR sourceString,
-                                                                        UINT32 length, _Out_
-                                                                        HSTRING_HEADER *hstringHeader,
-                                                                        _Outptr_result_maybenull_ _Result_nullonfailure_
-                                                                        HSTRING *string);
-
-    typedef PCWSTR(FAR STDAPICALLTYPE *f_WindowsGetStringRawBuffer)(_In_ HSTRING string, _Out_opt_ UINT32 *length);
-
-    typedef HRESULT(FAR STDAPICALLTYPE *f_WindowsDeleteString)(_In_opt_ HSTRING string);
-
-    static f_SetCurrentProcessExplicitAppUserModelID SetCurrentProcessExplicitAppUserModelID;
-    static f_PropVariantToString PropVariantToString;
-    static f_RoGetActivationFactory RoGetActivationFactory;
-    static f_WindowsCreateStringReference WindowsCreateStringReference;
-    static f_WindowsGetStringRawBuffer WindowsGetStringRawBuffer;
-    static f_WindowsDeleteString WindowsDeleteString;
-
-
-    template<class T>
-    _Check_return_ __inline HRESULT _1_GetActivationFactory(_In_ HSTRING activatableClassId, _COM_Outptr_ T **factory) {
-        return RoGetActivationFactory(activatableClassId, IID_INS_ARGS(factory));
-    }
-
-    template<typename T>
-    inline HRESULT
-    Wrap_GetActivationFactory(_In_ HSTRING activatableClassId, _Inout_ Details::ComPtrRef<T> factory) noexcept {
-        return _1_GetActivationFactory(activatableClassId, factory.ReleaseAndGetAddressOf());
-    }
-
-    inline HRESULT initialize() {
-        HINSTANCE LibShell32 = LoadLibraryW(L"SHELL32.DLL");
-        HRESULT hr = loadFunctionFromLibrary(LibShell32, "SetCurrentProcessExplicitAppUserModelID",
-                                             SetCurrentProcessExplicitAppUserModelID);
-        if (SUCCEEDED(hr)) {
-            HINSTANCE LibPropSys = LoadLibraryW(L"PROPSYS.DLL");
-            hr = loadFunctionFromLibrary(LibPropSys, "PropVariantToString", PropVariantToString);
-            if (SUCCEEDED(hr)) {
-                HINSTANCE LibComBase = LoadLibraryW(L"COMBASE.DLL");
-                const bool succeded =
-                        SUCCEEDED(loadFunctionFromLibrary(LibComBase, "RoGetActivationFactory", RoGetActivationFactory))
-                        && SUCCEEDED(loadFunctionFromLibrary(LibComBase, "WindowsCreateStringReference",
-                                                             WindowsCreateStringReference))
-                        && SUCCEEDED(loadFunctionFromLibrary(LibComBase, "WindowsGetStringRawBuffer",
-                                                             WindowsGetStringRawBuffer))
-                        && SUCCEEDED(loadFunctionFromLibrary(LibComBase, "WindowsDeleteString", WindowsDeleteString));
-                return succeded ? S_OK : E_FAIL;
-            }
-        }
-        return hr;
-    }
-}
 
 class WinToastStringWrapper {
 public:
