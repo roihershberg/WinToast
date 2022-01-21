@@ -27,6 +27,7 @@
 
 #include "dll_importer.h"
 #include "wintoast_string_wrapper.h"
+#include "internal_date_time.h"
 
 #pragma comment(lib, "shlwapi")
 #pragma comment(lib, "user32")
@@ -45,66 +46,6 @@
 // Quickstart: Handling toast activations from Win32 apps in Windows 10
 // https://blogs.msdn.microsoft.com/tiles_and_toasts/2015/10/16/quickstart-handling-toast-activations-from-win32-apps-in-windows-10/
 using namespace WinToastLib;
-
-class InternalDateTime : public IReference<DateTime> {
-public:
-    static INT64 Now() {
-        FILETIME now;
-        GetSystemTimeAsFileTime(&now);
-        return ((((INT64) now.dwHighDateTime) << 32) | now.dwLowDateTime);
-    }
-
-    InternalDateTime(DateTime dateTime) : _dateTime(dateTime) {}
-
-    InternalDateTime(INT64 millisecondsFromNow) {
-        _dateTime.UniversalTime = Now() + millisecondsFromNow * 10000;
-    }
-
-    virtual ~InternalDateTime() = default;
-
-    operator INT64() {
-        return _dateTime.UniversalTime;
-    }
-
-    HRESULT STDMETHODCALLTYPE get_Value(DateTime *dateTime) {
-        *dateTime = _dateTime;
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE QueryInterface(const IID &riid, void **ppvObject) {
-        if (!ppvObject) {
-            return E_POINTER;
-        }
-        if (riid == __uuidof(IUnknown) || riid == __uuidof(IReference<DateTime>)) {
-            *ppvObject = static_cast<IUnknown *>(static_cast<IReference<DateTime> *>(this));
-            return S_OK;
-        }
-        return E_NOINTERFACE;
-    }
-
-    ULONG STDMETHODCALLTYPE Release() {
-        return 1;
-    }
-
-    ULONG STDMETHODCALLTYPE AddRef() {
-        return 2;
-    }
-
-    HRESULT STDMETHODCALLTYPE GetIids(ULONG *, IID **) {
-        return E_NOTIMPL;
-    }
-
-    HRESULT STDMETHODCALLTYPE GetRuntimeClassName(HSTRING *) {
-        return E_NOTIMPL;
-    }
-
-    HRESULT STDMETHODCALLTYPE GetTrustLevel(TrustLevel *) {
-        return E_NOTIMPL;
-    }
-
-protected:
-    DateTime _dateTime;
-};
 
 namespace Util {
 
