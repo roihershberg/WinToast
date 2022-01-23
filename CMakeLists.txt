@@ -4,7 +4,8 @@ project(WinToast)
 set(CMAKE_CXX_STANDARD 14)
 
 add_library(WinToast STATIC
-        src/wintoastlib.cpp)
+        src/wintoastlib.cpp
+        src/wintoast_impl.cpp)
 target_include_directories(WinToast PRIVATE
         src)
 target_include_directories(WinToast PUBLIC

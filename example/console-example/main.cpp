@@ -1,5 +1,9 @@
-#include "wintoastlib.h"
+#include <Windows.h>
+
+#include <iostream>
 #include <string>     // std::string, std::stoi
+
+#include "wintoastlib.h"
 
 using namespace WinToastLib;
 
