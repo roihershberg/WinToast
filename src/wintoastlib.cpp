@@ -29,9 +29,9 @@ using namespace WinToastLib;
 
 WinToastImpl &WinToast::winToastImpl = WinToastImpl::instance();
 
-WinToast *WinToast::instance() {
+WinToast &WinToast::instance() {
     static WinToast instance;
-    return &instance;
+    return instance;
 }
 
 void WinToast::setAppName(const std::wstring &appName) {

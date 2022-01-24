@@ -213,7 +213,7 @@ namespace WinToastLib {
 
         virtual ~WinToast() = default;
 
-        static WinToast *instance();
+        static WinToast &instance();
 
         static bool isCompatible();
 

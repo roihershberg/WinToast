@@ -142,22 +142,22 @@ int wmain(int argc, LPWSTR *argv) {
             return Results::UnhandledOption;
         }
 
-    WinToast::instance()->setAppName(appName);
-    WinToast::instance()->setAppUserModelId(appUserModelID);
+    WinToast::instance().setAppName(appName);
+    WinToast::instance().setAppUserModelId(appUserModelID);
 
     if (onlyCreateShortcut) {
         if (!imagePath.empty() || !text.empty() || !actions.empty() || expiration) {
             std::wcerr << L"--only-create-shortcut does not accept images/text/actions/expiration" << std::endl;
             return 9;
         }
-        WinToast::ShortcutResult result = WinToast::instance()->createShortcut();
+        WinToast::ShortcutResult result = WinToast::instance().createShortcut();
         return (int) result ? 16 + (int) result : 0;
     }
 
     if (text.empty())
         text = L"Hello, world!";
 
-    if (!WinToast::instance()->initialize()) {
+    if (!WinToast::instance().initialize()) {
         std::wcerr << L"Error, your system in not compatible!" << std::endl;
         return Results::InitializationFailure;
     }
@@ -177,7 +177,7 @@ int wmain(int argc, LPWSTR *argv) {
         templ.setImagePath(imagePath);
 
     std::unique_ptr<CustomHandler> customHandler = std::make_unique<CustomHandler>();
-    if (WinToast::instance()->showToast(templ, customHandler.get()) < 0) {
+    if (WinToast::instance().showToast(templ, customHandler.get()) < 0) {
         std::wcerr << L"Could not launch your toast notification!";
         return Results::ToastFailed;
     }
