@@ -22,19 +22,13 @@
 #define WINTOAST_WINTOAST_IMPL_H
 
 #include <Windows.h>
-#include <ShObjIdl.h>
-#include <wrl/implements.h>
-#include <windows.ui.notifications.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Data.Xml.Dom.h>
+#include <winrt/Windows.UI.Notifications.h>
 
 #include <map>
 
 #include "wintoastlib.h"
-
-using namespace Microsoft::WRL;
-using namespace ABI::Windows::Data::Xml::Dom;
-using namespace ABI::Windows::Foundation;
-using namespace ABI::Windows::UI::Notifications;
-using namespace Windows::Foundation;
 
 namespace WinToastLib {
 
@@ -54,8 +48,6 @@ namespace WinToastLib {
                                           _In_ const std::wstring &productName,
                                           _In_ const std::wstring &subProduct = std::wstring(),
                                           _In_ const std::wstring &versionInformation = std::wstring());
-
-        static const std::wstring &strerror(_In_ WinToast::WinToastError error);
 
         virtual bool initialize(_Out_opt_ WinToast::WinToastError *error = nullptr);
 
@@ -86,29 +78,32 @@ namespace WinToastLib {
         WinToast::ShortcutPolicy _shortcutPolicy{WinToast::ShortcutPolicy::SHORTCUT_POLICY_REQUIRE_CREATE};
         std::wstring _appName{};
         std::wstring _aumi{};
-        std::map<INT64, ComPtr<IToastNotification>> _buffer{};
+        std::map<INT64, winrt::Windows::UI::Notifications::ToastNotification> _buffer{};
 
-        HRESULT validateShellLinkHelper(_Out_ bool &wasChanged);
+        void validateShellLinkHelper(_Out_ bool &wasChanged);
 
-        HRESULT createShellLinkHelper();
+        void createShellLinkHelper();
 
-        HRESULT setImageFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &path);
+        void setImageFieldHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_ const std::wstring &path);
 
-        HRESULT setAudioFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &path, _In_opt_
-                                    WinToastTemplate::AudioOption option = WinToastTemplate::AudioOption::Default);
+        void setAudioFieldHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_ const std::wstring &path,
+                                 _In_opt_
+                                 WinToastTemplate::AudioOption option = WinToastTemplate::AudioOption::Default);
 
-        HRESULT setTextFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &text, _In_ UINT32 pos);
+        void
+        setTextFieldHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_ const std::wstring &text, _In_
+                           UINT32 pos);
 
-        HRESULT setAttributionTextFieldHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &text);
+        void setAttributionTextFieldHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_
+                                           const std::wstring &text);
 
-        HRESULT
-        addActionHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &action, _In_ const std::wstring &arguments);
+        void
+        addActionHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_ const std::wstring &action, _In_
+                        const std::wstring &arguments);
 
-        HRESULT addDurationHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &duration);
+        void addDurationHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_ const std::wstring &duration);
 
-        HRESULT addScenarioHelper(_In_ IXmlDocument *xml, _In_ const std::wstring &scenario);
-
-        ComPtr<IToastNotifier> notifier(_In_ bool *succeded) const;
+        void addScenarioHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_ const std::wstring &scenario);
 
         void setError(_Out_opt_ WinToast::WinToastError *error, _In_ WinToast::WinToastError value);
     };
