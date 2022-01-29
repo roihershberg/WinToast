@@ -34,7 +34,6 @@
 #include <functional>
 
 #include "dll_importer.h"
-#include "wintoast_string_wrapper.h"
 
 #pragma comment(lib, "shlwapi")
 #pragma comment(lib, "user32")
