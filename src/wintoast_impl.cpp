@@ -261,10 +261,7 @@ void WinToastImpl::setShortcutPolicy(_In_ WinToast::ShortcutPolicy shortcutPolic
 bool WinToastImpl::isCompatible() {
     DllImporter::initialize();
     return !((DllImporter::SetCurrentProcessExplicitAppUserModelID == nullptr)
-             || (DllImporter::PropVariantToString == nullptr)
-             || (DllImporter::RoGetActivationFactory == nullptr)
-             || (DllImporter::WindowsCreateStringReference == nullptr)
-             || (DllImporter::WindowsDeleteString == nullptr));
+             || (DllImporter::PropVariantToString == nullptr));
 }
 
 bool WinToastImpl::isSupportingModernFeatures() {
