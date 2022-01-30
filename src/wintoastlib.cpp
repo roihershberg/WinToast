@@ -48,18 +48,18 @@ void WinToast::setShortcutPolicy(ShortcutPolicy shortcutPolicy) {
 }
 
 bool WinToast::isCompatible() {
-    return winToastImpl.isCompatible();
+    return WinToastImpl::isCompatible();
 }
 
 bool WinToast::isSupportingModernFeatures() {
-    return winToastImpl.isSupportingModernFeatures();
+    return WinToastImpl::isSupportingModernFeatures();
 }
 
 std::wstring WinToast::configureAUMI(const std::wstring &companyName,
                                      const std::wstring &productName,
                                      const std::wstring &subProduct,
                                      const std::wstring &versionInformation) {
-    return winToastImpl.configureAUMI(companyName, productName, subProduct, versionInformation);
+    return WinToastImpl::configureAUMI(companyName, productName, subProduct, versionInformation);
 }
 
 const std::wstring &WinToast::strerror(WinToastError error) {
