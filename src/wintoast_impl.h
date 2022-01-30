@@ -38,20 +38,20 @@ namespace WinToastLib {
 
         ~WinToastImpl();
 
-        static WinToastImpl &instance();
+        [[nodiscard]] static WinToastImpl &instance();
 
-        static bool isCompatible();
+        [[nodiscard]] static bool isCompatible();
 
-        static bool isSupportingModernFeatures();
+        [[nodiscard]] static bool isSupportingModernFeatures();
 
-        static std::wstring configureAUMI(_In_ const std::wstring &companyName,
+        [[nodiscard]] static std::wstring configureAUMI(_In_ const std::wstring &companyName,
                                           _In_ const std::wstring &productName,
                                           _In_ const std::wstring &subProduct = std::wstring(),
                                           _In_ const std::wstring &versionInformation = std::wstring());
 
         bool initialize(_Out_opt_ WinToast::WinToastError *error = nullptr);
 
-        bool isInitialized() const;
+        [[nodiscard]] bool isInitialized() const;
 
         bool hideToast(_In_ INT64 id);
 
@@ -62,9 +62,9 @@ namespace WinToastLib {
 
         WinToast::ShortcutResult createShortcut();
 
-        const std::wstring &appName() const;
+        [[nodiscard]] const std::wstring &appName() const;
 
-        const std::wstring &appUserModelId() const;
+        [[nodiscard]] const std::wstring &appUserModelId() const;
 
         void setAppUserModelId(_In_ const std::wstring &aumi);
 

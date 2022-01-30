@@ -135,33 +135,33 @@ namespace WinToastLib {
 
         void addAction(const std::wstring &label);
 
-        std::size_t textFieldsCount() const;
+        [[nodiscard]] std::size_t textFieldsCount() const;
 
-        std::size_t actionsCount() const;
+        [[nodiscard]] std::size_t actionsCount() const;
 
-        bool hasImage() const;
+        [[nodiscard]] bool hasImage() const;
 
-        const std::vector<std::wstring> &textFields() const;
+        [[nodiscard]] const std::vector<std::wstring> &textFields() const;
 
-        const std::wstring &textField(TextField pos) const;
+        [[nodiscard]] const std::wstring &textField(TextField pos) const;
 
-        const std::wstring &actionLabel(std::size_t pos) const;
+        [[nodiscard]] const std::wstring &actionLabel(std::size_t pos) const;
 
-        const std::wstring &imagePath() const;
+        [[nodiscard]] const std::wstring &imagePath() const;
 
-        const std::wstring &audioPath() const;
+        [[nodiscard]] const std::wstring &audioPath() const;
 
-        const std::wstring &attributionText() const;
+        [[nodiscard]] const std::wstring &attributionText() const;
 
-        const std::wstring &scenario() const;
+        [[nodiscard]] const std::wstring &scenario() const;
 
-        INT64 expiration() const;
+        [[nodiscard]] INT64 expiration() const;
 
-        WinToastTemplateType type() const;
+        [[nodiscard]] WinToastTemplateType type() const;
 
-        WinToastTemplate::AudioOption audioOption() const;
+        [[nodiscard]] WinToastTemplate::AudioOption audioOption() const;
 
-        Duration duration() const;
+        [[nodiscard]] Duration duration() const;
 
     private:
         std::vector<std::wstring> _textFields{};
@@ -210,23 +210,23 @@ namespace WinToastLib {
              * This is the default. */
             SHORTCUT_POLICY_REQUIRE_CREATE = 2,
         };
+        
+        [[nodiscard]] static WinToast &instance();
 
-        static WinToast &instance();
+        [[nodiscard]] static bool isCompatible();
 
-        static bool isCompatible();
+        [[nodiscard]] static bool isSupportingModernFeatures();
 
-        static bool isSupportingModernFeatures();
+        [[nodiscard]] static std::wstring configureAUMI(const std::wstring &companyName,
+                                                        const std::wstring &productName,
+                                                        const std::wstring &subProduct = std::wstring(),
+                                                        const std::wstring &versionInformation = std::wstring());
 
-        static std::wstring configureAUMI(const std::wstring &companyName,
-                                          const std::wstring &productName,
-                                          const std::wstring &subProduct = std::wstring(),
-                                          const std::wstring &versionInformation = std::wstring());
-
-        static const std::wstring &strerror(WinToastError error);
+        [[nodiscard]] static const std::wstring &strerror(WinToastError error);
 
         bool initialize(WinToastError *error = nullptr);
 
-        bool isInitialized() const;
+        [[nodiscard]] bool isInitialized() const;
 
         bool hideToast(INT64 id);
 
@@ -237,9 +237,9 @@ namespace WinToastLib {
 
         ShortcutResult createShortcut();
 
-        const std::wstring &appName() const;
+        [[nodiscard]] const std::wstring &appName() const;
 
-        const std::wstring &appUserModelId() const;
+        [[nodiscard]] const std::wstring &appUserModelId() const;
 
         void setAppUserModelId(const std::wstring &aumi);
 
