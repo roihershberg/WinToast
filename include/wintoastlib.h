@@ -211,8 +211,6 @@ namespace WinToastLib {
             SHORTCUT_POLICY_REQUIRE_CREATE = 2,
         };
 
-        virtual ~WinToast() = default;
-
         static WinToast &instance();
 
         static bool isCompatible();
@@ -226,18 +224,18 @@ namespace WinToastLib {
 
         static const std::wstring &strerror(WinToastError error);
 
-        virtual bool initialize(WinToastError *error = nullptr);
+        bool initialize(WinToastError *error = nullptr);
 
-        virtual bool isInitialized() const;
+        bool isInitialized() const;
 
-        virtual bool hideToast(INT64 id);
+        bool hideToast(INT64 id);
 
-        virtual INT64
+        INT64
         showToast(const WinToastTemplate &toast, IWinToastHandler *handler, WinToastError *error = nullptr);
 
-        virtual void clear();
+        void clear();
 
-        virtual ShortcutResult createShortcut();
+        ShortcutResult createShortcut();
 
         const std::wstring &appName() const;
 

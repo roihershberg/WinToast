@@ -36,7 +36,7 @@ namespace WinToastLib {
     public:
         WinToastImpl();
 
-        virtual ~WinToastImpl();
+        ~WinToastImpl();
 
         static WinToastImpl &instance();
 
@@ -49,18 +49,18 @@ namespace WinToastLib {
                                           _In_ const std::wstring &subProduct = std::wstring(),
                                           _In_ const std::wstring &versionInformation = std::wstring());
 
-        virtual bool initialize(_Out_opt_ WinToast::WinToastError *error = nullptr);
+        bool initialize(_Out_opt_ WinToast::WinToastError *error = nullptr);
 
-        virtual bool isInitialized() const;
+        bool isInitialized() const;
 
-        virtual bool hideToast(_In_ INT64 id);
+        bool hideToast(_In_ INT64 id);
 
-        virtual INT64 showToast(_In_ const WinToastTemplate &toast, _In_ IWinToastHandler *handler, _Out_opt_
+        INT64 showToast(_In_ const WinToastTemplate &toast, _In_ IWinToastHandler *handler, _Out_opt_
                                 WinToast::WinToastError *error = nullptr);
 
-        virtual void clear();
+        void clear();
 
-        virtual WinToast::ShortcutResult createShortcut();
+        WinToast::ShortcutResult createShortcut();
 
         const std::wstring &appName() const;
 
@@ -72,7 +72,7 @@ namespace WinToastLib {
 
         void setShortcutPolicy(_In_ WinToast::ShortcutPolicy policy);
 
-    protected:
+    private:
         bool _isInitialized{false};
         bool _hasCoInitialized{false};
         WinToast::ShortcutPolicy _shortcutPolicy{WinToast::ShortcutPolicy::SHORTCUT_POLICY_REQUIRE_CREATE};
