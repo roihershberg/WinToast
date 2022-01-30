@@ -248,7 +248,7 @@ void WinToastImpl::setShortcutPolicy(_In_ WinToast::ShortcutPolicy shortcutPolic
 
 bool WinToastImpl::isCompatible() {
     return DllImporter::initialize() && !((DllImporter::SetCurrentProcessExplicitAppUserModelID == nullptr)
-             || (DllImporter::PropVariantToString == nullptr));
+                                          || (DllImporter::PropVariantToString == nullptr));
 }
 
 bool WinToastImpl::isSupportingModernFeatures() {
@@ -482,11 +482,13 @@ INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToas
     )
     catchAndLogHresult(
             {
+                XmlNodeList textFields = xmlDocument.GetElementsByTagName(L"text");
+
                 for (UINT32 i = 0, fieldsCount = static_cast<UINT32>(toast.textFieldsCount()); i < fieldsCount; i++) {
-                    setTextFieldHelper(xmlDocument, toast.textField(WinToastTemplate::TextField(i)), i);
+                    textFields.Item(i).InnerText(toast.textField(WinToastTemplate::TextField(i)));
                 }
             },
-            "Error in setTextFieldHelper: ",
+            "Error in showToast while setting text fields: ",
             {
                 setError(error, WinToast::WinToastError::UnknownError);
                 return -1;
@@ -691,12 +693,6 @@ void WinToastImpl::addScenarioHelper(_In_ XmlDocument xml, _In_ const std::wstri
     XmlElement toastElement = toastNode.as<XmlElement>();
     toastElement.SetAttribute(L"scenario", scenario);
 }
-
-void WinToastImpl::setTextFieldHelper(_In_ XmlDocument xml, _In_ const std::wstring &text, _In_ UINT32 pos) {
-    IXmlNode node = xml.SelectSingleNode(L"//text[" + std::to_wstring(pos + 1) + L"]");
-    node.InnerText(text);
-}
-
 
 void WinToastImpl::setImageFieldHelper(_In_ XmlDocument xml, _In_ const std::wstring &path) {
     assert(path.size() < MAX_PATH);

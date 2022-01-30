@@ -90,10 +90,6 @@ namespace WinToastLib {
                                  _In_opt_
                                  WinToastTemplate::AudioOption option = WinToastTemplate::AudioOption::Default);
 
-        void
-        setTextFieldHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_ const std::wstring &text, _In_
-                           UINT32 pos);
-
         void setAttributionTextFieldHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_
                                            const std::wstring &text);
 
