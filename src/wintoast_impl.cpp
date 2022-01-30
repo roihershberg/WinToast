@@ -537,13 +537,14 @@ INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToas
             )
         }
 
+        auto toastElement = xmlDocument.SelectSingleNode(L"//toast[1]").as<XmlElement>();
+
         if (toast.duration() != WinToastTemplate::Duration::System) {
             catchAndLogHresult(
                     {
-                        xmlDocument.SelectSingleNode(L"//toast[1]").as<XmlElement>()
-                                .SetAttribute(L"duration",
-                                              (toast.duration() == WinToastTemplate::Duration::Short) ? L"short"
-                                                                                                      : L"long");
+                        toastElement.SetAttribute(L"duration",
+                                                  (toast.duration() == WinToastTemplate::Duration::Short) ? L"short"
+                                                                                                          : L"long");
                     },
                     "Error in showToast while setting duration: ",
                     {
@@ -554,10 +555,7 @@ INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToas
         }
 
         catchAndLogHresult(
-                {
-                    xmlDocument.SelectSingleNode(L"//toast[1]").as<XmlElement>().SetAttribute(L"scenario",
-                                                                                              toast.scenario());
-                },
+                { toastElement.SetAttribute(L"scenario", toast.scenario()); },
                 "Error in showToast while setting scenario: ",
                 {
                     setError(error, WinToast::WinToastError::UnknownError);
