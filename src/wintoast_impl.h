@@ -1,4 +1,4 @@
-/* * Copyright (C) 2016-2019 Mohammed Boujemaoui <mohabouje@gmail.com>
+/* * Copyright (c) 2022 Roee Hershberg <roihershberg@protonmail.com>, 2016-2021 Mohammed Boujemaoui <mohabouje@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
