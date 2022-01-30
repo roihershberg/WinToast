@@ -173,11 +173,6 @@ namespace Util {
         DEBUG_MSG("Default shell link file path: " << path);
     }
 
-    inline void setNodeStringValue(const std::wstring &string, IXmlNode node, XmlDocument xml) {
-        XmlText textNode = xml.CreateTextNode(string);
-        node.AppendChild(textNode);
-    }
-
     inline void
     setEventHandlers(_In_ ToastNotification notification, _In_ const std::shared_ptr<IWinToastHandler> &eventHandler,
                      _In_ INT64 expirationTime) {
@@ -698,7 +693,7 @@ void WinToastImpl::setAttributionTextFieldHelper(_In_ XmlDocument xml, _In_ cons
         XmlNamedNodeMap attributes = textNode.Attributes();
         IXmlNode editedNode = attributes.GetNamedItem(L"placement");
         if (editedNode) {
-            Util::setNodeStringValue(L"attribution", editedNode, xml);
+            editedNode.InnerText(L"attribution");
             setTextFieldHelper(xml, text, i);
         }
     }
@@ -718,7 +713,7 @@ void WinToastImpl::addScenarioHelper(_In_ XmlDocument xml, _In_ const std::wstri
 
 void WinToastImpl::setTextFieldHelper(_In_ XmlDocument xml, _In_ const std::wstring &text, _In_ UINT32 pos) {
     IXmlNode node = xml.GetElementsByTagName(L"text").Item(pos);
-    Util::setNodeStringValue(text, node, xml);
+    node.InnerText(text);
 }
 
 
@@ -729,7 +724,7 @@ void WinToastImpl::setImageFieldHelper(_In_ XmlDocument xml, _In_ const std::wst
     winrt::check_hresult(StringCchCatW(imagePath, MAX_PATH, path.c_str()));
     IXmlNode node = xml.GetElementsByTagName(L"image").Item(0);
     IXmlNode editedNode = node.Attributes().GetNamedItem(L"src");
-    Util::setNodeStringValue(imagePath, editedNode, xml);
+    editedNode.InnerText(imagePath);
 }
 
 void WinToastImpl::setAudioFieldHelper(_In_ XmlDocument xml, _In_ const std::wstring &path, _In_opt_
@@ -742,21 +737,17 @@ void WinToastImpl::setAudioFieldHelper(_In_ XmlDocument xml, _In_ const std::wst
 
     IXmlNode node = xml.GetElementsByTagName(L"audio").Item(0);
     XmlNamedNodeMap attributes = node.Attributes();
-    IXmlNode editedNode;
 
     if (!path.empty()) {
-        editedNode = attributes.GetNamedItem(L"src");
-        Util::setNodeStringValue(path, editedNode, xml);
+        attributes.GetNamedItem(L"src").InnerText(path);
     }
 
     switch (option) {
         case WinToastTemplate::AudioOption::Loop:
-            editedNode = attributes.GetNamedItem(L"loop");
-            Util::setNodeStringValue(L"true", editedNode, xml);
+            attributes.GetNamedItem(L"loop").InnerText(L"true");
             break;
         case WinToastTemplate::AudioOption::Silent:
-            editedNode = attributes.GetNamedItem(L"silent");
-            Util::setNodeStringValue(L"true", editedNode, xml);
+            attributes.GetNamedItem(L"silent").InnerText(L"true");
         default:
             break;
     }
