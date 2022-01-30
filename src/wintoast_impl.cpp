@@ -205,7 +205,7 @@ namespace Util {
 
     inline XmlElement
     createElement(_In_ XmlDocument xml, _In_ const std::wstring &root_node, _In_ const std::wstring &element_name) {
-        IXmlNode root = xml.GetElementsByTagName(root_node).Item(0);
+        IXmlNode root = xml.SelectSingleNode(L"//" + root_node + L"[1]");
         XmlElement element = xml.CreateElement(element_name);
         root.AppendChild(element);
 
@@ -681,19 +681,19 @@ void WinToastImpl::setAttributionTextFieldHelper(_In_ XmlDocument xml, _In_ cons
 }
 
 void WinToastImpl::addDurationHelper(_In_ XmlDocument xml, _In_ const std::wstring &duration) {
-    IXmlNode toastNode = xml.GetElementsByTagName(L"toast").Item(0);
+    IXmlNode toastNode = xml.SelectSingleNode(L"//toast[1]");
     XmlElement toastElement = toastNode.as<XmlElement>();
     toastElement.SetAttribute(L"duration", duration);
 }
 
 void WinToastImpl::addScenarioHelper(_In_ XmlDocument xml, _In_ const std::wstring &scenario) {
-    IXmlNode toastNode = xml.GetElementsByTagName(L"toast").Item(0);
+    IXmlNode toastNode = xml.SelectSingleNode(L"//toast[1]");
     XmlElement toastElement = toastNode.as<XmlElement>();
     toastElement.SetAttribute(L"scenario", scenario);
 }
 
 void WinToastImpl::setTextFieldHelper(_In_ XmlDocument xml, _In_ const std::wstring &text, _In_ UINT32 pos) {
-    IXmlNode node = xml.GetElementsByTagName(L"text").Item(pos);
+    IXmlNode node = xml.SelectSingleNode(L"//text[" + std::to_wstring(pos + 1) + L"]");
     node.InnerText(text);
 }
 
@@ -703,7 +703,7 @@ void WinToastImpl::setImageFieldHelper(_In_ XmlDocument xml, _In_ const std::wst
 
     wchar_t imagePath[MAX_PATH] = L"file:///";
     winrt::check_hresult(StringCchCatW(imagePath, MAX_PATH, path.c_str()));
-    XmlElement imageElement = xml.GetElementsByTagName(L"image").Item(0).as<XmlElement>();
+    XmlElement imageElement = xml.SelectSingleNode(L"//image[1]").as<XmlElement>();
     imageElement.SetAttribute(L"src", imagePath);
 }
 
@@ -711,7 +711,7 @@ void WinToastImpl::setAudioFieldHelper(_In_ XmlDocument xml, _In_ const std::wst
                                        WinToastTemplate::AudioOption option) {
     Util::createElement(xml, L"toast", L"audio");
 
-    XmlElement audioElement = xml.GetElementsByTagName(L"audio").Item(0).as<XmlElement>();
+    XmlElement audioElement = xml.SelectSingleNode(L"//audio[1]").as<XmlElement>();
 
     if (!path.empty()) {
         audioElement.SetAttribute(L"src", path);
@@ -730,27 +730,21 @@ void WinToastImpl::setAudioFieldHelper(_In_ XmlDocument xml, _In_ const std::wst
 
 void WinToastImpl::addActionHelper(_In_ XmlDocument xml, _In_ const std::wstring &content, _In_
                                    const std::wstring &arguments) {
-    XmlNodeList nodeList = xml.GetElementsByTagName(L"actions");
-    UINT32 length = nodeList.Length();
-    IXmlNode actionsNode;
+    XmlElement actionsElement = xml.SelectSingleNode(L"//actions[1]").as<XmlElement>();
 
-    if (length > 0) {
-        actionsNode = nodeList.Item(0);
-    } else {
-        nodeList = xml.GetElementsByTagName(L"toast");
-        XmlElement toastElement = nodeList.Item(0).as<XmlElement>();
+    if (!actionsElement) {
+        XmlElement toastElement = xml.SelectSingleNode(L"//toast[1]").as<XmlElement>();
         toastElement.SetAttribute(L"template", L"ToastGeneric");
         toastElement.SetAttribute(L"duration", L"long");
 
-        XmlElement actionsElement = xml.CreateElement(L"actions");
-        actionsNode = actionsElement;
-        toastElement.AppendChild(actionsNode);
+        actionsElement = xml.CreateElement(L"actions");
+        toastElement.AppendChild(actionsElement);
     }
 
-    IXmlElement actionElement = xml.CreateElement(L"action");
+    XmlElement actionElement = xml.CreateElement(L"action");
     actionElement.SetAttribute(L"content", content);
     actionElement.SetAttribute(L"arguments", arguments);
-    actionsNode.AppendChild(actionElement);
+    actionsElement.AppendChild(actionElement);
 }
 
 void WinToastImpl::setError(_Out_opt_ WinToast::WinToastError *error, _In_ WinToast::WinToastError value) {
