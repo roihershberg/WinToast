@@ -97,8 +97,6 @@ namespace WinToastLib {
         addActionHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_ const std::wstring &action, _In_
                         const std::wstring &arguments);
 
-        void addScenarioHelper(_In_ winrt::Windows::Data::Xml::Dom::XmlDocument xml, _In_ const std::wstring &scenario);
-
         void setError(_Out_opt_ WinToast::WinToastError *error, _In_ WinToast::WinToastError value);
     };
 }

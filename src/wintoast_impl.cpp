@@ -554,8 +554,11 @@ INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToas
         }
 
         catchAndLogHresult(
-                { addScenarioHelper(xmlDocument, toast.scenario()); },
-                "Error in addScenarioHelper: ",
+                {
+                    xmlDocument.SelectSingleNode(L"//toast[1]").as<XmlElement>().SetAttribute(L"scenario",
+                                                                                              toast.scenario());
+                },
+                "Error in showToast while setting scenario: ",
                 {
                     setError(error, WinToast::WinToastError::UnknownError);
                     return -1;
@@ -682,12 +685,6 @@ void WinToastImpl::setAttributionTextFieldHelper(_In_ XmlDocument xml, _In_ cons
     XmlElement attributionElement = Util::createElement(xml, L"binding", L"text");
     attributionElement.SetAttribute(L"placement", L"attribution");
     attributionElement.InnerText(text);
-}
-
-void WinToastImpl::addScenarioHelper(_In_ XmlDocument xml, _In_ const std::wstring &scenario) {
-    IXmlNode toastNode = xml.SelectSingleNode(L"//toast[1]");
-    XmlElement toastElement = toastNode.as<XmlElement>();
-    toastElement.SetAttribute(L"scenario", scenario);
 }
 
 void WinToastImpl::setImageFieldHelper(_In_ XmlDocument xml, _In_ const std::wstring &path) {
