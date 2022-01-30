@@ -203,22 +203,13 @@ namespace Util {
         });
     }
 
-    inline void addAttribute(_In_ const XmlDocument xml, const std::wstring &name, const XmlNamedNodeMap attributeMap) {
-        XmlAttribute attribute = xml.CreateAttribute(name);
-        attributeMap.SetNamedItem(attribute);
-    }
-
-    inline void
-    createElement(_In_ XmlDocument xml, _In_ const std::wstring &root_node, _In_ const std::wstring &element_name,
-                  _In_ const std::vector<std::wstring> &attribute_names) {
+    inline XmlElement
+    createElement(_In_ XmlDocument xml, _In_ const std::wstring &root_node, _In_ const std::wstring &element_name) {
         IXmlNode root = xml.GetElementsByTagName(root_node).Item(0);
         XmlElement element = xml.CreateElement(element_name);
         root.AppendChild(element);
 
-        XmlNamedNodeMap attributes = element.Attributes();
-        for (const auto &it: attribute_names) {
-            addAttribute(xml, it, attributes);
-        }
+        return element;
     }
 }
 
@@ -684,19 +675,9 @@ void WinToastImpl::clear() {
 //       the toast's text fields or getting a count of them.
 //
 void WinToastImpl::setAttributionTextFieldHelper(_In_ XmlDocument xml, _In_ const std::wstring &text) {
-    Util::createElement(xml, L"binding", L"text", {L"placement"});
-    XmlNodeList nodeList = xml.GetElementsByTagName(L"text");
-    UINT32 nodeListLength = nodeList.Length();
-
-    for (UINT32 i = 0; i < nodeListLength; i++) {
-        IXmlNode textNode = nodeList.Item(i);
-        XmlNamedNodeMap attributes = textNode.Attributes();
-        IXmlNode editedNode = attributes.GetNamedItem(L"placement");
-        if (editedNode) {
-            editedNode.InnerText(L"attribution");
-            setTextFieldHelper(xml, text, i);
-        }
-    }
+    XmlElement attributionElement = Util::createElement(xml, L"binding", L"text");
+    attributionElement.SetAttribute(L"placement", L"attribution");
+    attributionElement.InnerText(text);
 }
 
 void WinToastImpl::addDurationHelper(_In_ XmlDocument xml, _In_ const std::wstring &duration) {
@@ -722,32 +703,26 @@ void WinToastImpl::setImageFieldHelper(_In_ XmlDocument xml, _In_ const std::wst
 
     wchar_t imagePath[MAX_PATH] = L"file:///";
     winrt::check_hresult(StringCchCatW(imagePath, MAX_PATH, path.c_str()));
-    IXmlNode node = xml.GetElementsByTagName(L"image").Item(0);
-    IXmlNode editedNode = node.Attributes().GetNamedItem(L"src");
-    editedNode.InnerText(imagePath);
+    XmlElement imageElement = xml.GetElementsByTagName(L"image").Item(0).as<XmlElement>();
+    imageElement.SetAttribute(L"src", imagePath);
 }
 
 void WinToastImpl::setAudioFieldHelper(_In_ XmlDocument xml, _In_ const std::wstring &path, _In_opt_
                                        WinToastTemplate::AudioOption option) {
-    std::vector<std::wstring> attrs;
-    if (!path.empty()) attrs.emplace_back(L"src");
-    if (option == WinToastTemplate::AudioOption::Loop) attrs.emplace_back(L"loop");
-    if (option == WinToastTemplate::AudioOption::Silent) attrs.emplace_back(L"silent");
-    Util::createElement(xml, L"toast", L"audio", attrs);
+    Util::createElement(xml, L"toast", L"audio");
 
-    IXmlNode node = xml.GetElementsByTagName(L"audio").Item(0);
-    XmlNamedNodeMap attributes = node.Attributes();
+    XmlElement audioElement = xml.GetElementsByTagName(L"audio").Item(0).as<XmlElement>();
 
     if (!path.empty()) {
-        attributes.GetNamedItem(L"src").InnerText(path);
+        audioElement.SetAttribute(L"src", path);
     }
 
     switch (option) {
         case WinToastTemplate::AudioOption::Loop:
-            attributes.GetNamedItem(L"loop").InnerText(L"true");
+            audioElement.SetAttribute(L"loop", L"true");
             break;
         case WinToastTemplate::AudioOption::Silent:
-            attributes.GetNamedItem(L"silent").InnerText(L"true");
+            audioElement.SetAttribute(L"silent", L"true");
         default:
             break;
     }
