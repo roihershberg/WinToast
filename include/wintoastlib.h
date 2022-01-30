@@ -105,7 +105,7 @@ namespace WinToastLib {
         };
 
 
-        WinToastTemplate(WinToastTemplateType type = WinToastTemplateType::ImageAndText02);
+        explicit WinToastTemplate(WinToastTemplateType type = WinToastTemplateType::ImageAndText02);
 
         ~WinToastTemplate();
 
