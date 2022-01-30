@@ -29,8 +29,6 @@ typedef signed __int64 INT64, *PINT64;
 
 namespace WinToastLib {
 
-    class WinToastImpl;
-
     class IWinToastHandler {
     public:
         enum class WinToastDismissalReason {
@@ -176,8 +174,7 @@ namespace WinToastLib {
         Duration _duration{Duration::System};
     };
 
-    class WinToast {
-    public:
+    namespace WinToast {
         enum class WinToastError {
             NoError = 0,
             NotInitialized,
@@ -210,23 +207,21 @@ namespace WinToastLib {
              * This is the default. */
             SHORTCUT_POLICY_REQUIRE_CREATE = 2,
         };
-        
-        [[nodiscard]] static WinToast &instance();
 
-        [[nodiscard]] static bool isCompatible();
+        [[nodiscard]] bool isCompatible();
 
-        [[nodiscard]] static bool isSupportingModernFeatures();
+        [[nodiscard]] bool isSupportingModernFeatures();
 
-        [[nodiscard]] static std::wstring configureAUMI(const std::wstring &companyName,
+        [[nodiscard]] std::wstring configureAUMI(const std::wstring &companyName,
                                                         const std::wstring &productName,
                                                         const std::wstring &subProduct = std::wstring(),
                                                         const std::wstring &versionInformation = std::wstring());
 
-        [[nodiscard]] static const std::wstring &strerror(WinToastError error);
+        [[nodiscard]] const std::wstring &strerror(WinToastError error);
 
         bool initialize(WinToastError *error = nullptr);
 
-        [[nodiscard]] bool isInitialized() const;
+        [[nodiscard]] bool isInitialized();
 
         bool hideToast(INT64 id);
 
@@ -237,19 +232,16 @@ namespace WinToastLib {
 
         ShortcutResult createShortcut();
 
-        [[nodiscard]] const std::wstring &appName() const;
+        [[nodiscard]] const std::wstring &appName();
 
-        [[nodiscard]] const std::wstring &appUserModelId() const;
+        [[nodiscard]] const std::wstring &appUserModelId();
 
         void setAppUserModelId(const std::wstring &aumi);
 
         void setAppName(const std::wstring &appName);
 
         void setShortcutPolicy(ShortcutPolicy policy);
-
-    private:
-        static WinToastImpl &winToastImpl;
-    };
+    }
 }
 
 #endif // WINTOASTLIB_H

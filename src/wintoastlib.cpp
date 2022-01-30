@@ -27,88 +27,87 @@
 
 using namespace WinToastLib;
 
-WinToastImpl &WinToast::winToastImpl = WinToastImpl::instance();
+namespace WinToastLib::WinToast {
+    namespace {
+        WinToastImpl &winToastImpl = WinToastImpl::instance();
+    }
 
-WinToast &WinToast::instance() {
-    static WinToast instance;
-    return instance;
-}
+    void setAppName(const std::wstring &appName) {
+        winToastImpl.setAppName(appName);
+    }
 
-void WinToast::setAppName(const std::wstring &appName) {
-    winToastImpl.setAppName(appName);
-}
+    void setAppUserModelId(const std::wstring &aumi) {
+        winToastImpl.setAppUserModelId(aumi);
+    }
 
+    void setShortcutPolicy(ShortcutPolicy shortcutPolicy) {
+        winToastImpl.setShortcutPolicy(shortcutPolicy);
+    }
 
-void WinToast::setAppUserModelId(const std::wstring &aumi) {
-    winToastImpl.setAppUserModelId(aumi);
-}
+    bool isCompatible() {
+        return WinToastImpl::isCompatible();
+    }
 
-void WinToast::setShortcutPolicy(ShortcutPolicy shortcutPolicy) {
-    winToastImpl.setShortcutPolicy(shortcutPolicy);
-}
+    bool isSupportingModernFeatures() {
+        return WinToastImpl::isSupportingModernFeatures();
+    }
 
-bool WinToast::isCompatible() {
-    return WinToastImpl::isCompatible();
-}
+    std::wstring configureAUMI(const std::wstring &companyName,
+                               const std::wstring &productName,
+                               const std::wstring &subProduct,
+                               const std::wstring &versionInformation) {
+        return WinToastImpl::configureAUMI(companyName, productName, subProduct, versionInformation);
+    }
 
-bool WinToast::isSupportingModernFeatures() {
-    return WinToastImpl::isSupportingModernFeatures();
-}
+    const std::wstring &strerror(WinToastError error) {
+        static const std::unordered_map<WinToastError, std::wstring> Labels = {
+                {WinToastError::NoError,               L"No error. The process was executed correctly"},
+                {WinToastError::NotInitialized,        L"The library has not been initialized"},
+                {WinToastError::SystemNotSupported,    L"The OS does not support WinToast"},
+                {WinToastError::ShellLinkNotCreated,   L"The library was not able to create a Shell Link for the app"},
+                {WinToastError::InvalidAppUserModelID, L"The AUMI is not a valid one"},
+                {WinToastError::InvalidParameters,     L"The parameters used to configure the library are not valid normally because an invalid AUMI or App Name"},
+                {WinToastError::NotDisplayed,          L"The toast was created correctly but WinToast was not able to display the toast"},
+                {WinToastError::UnknownError,          L"Unknown error"}
+        };
 
-std::wstring WinToast::configureAUMI(const std::wstring &companyName,
-                                     const std::wstring &productName,
-                                     const std::wstring &subProduct,
-                                     const std::wstring &versionInformation) {
-    return WinToastImpl::configureAUMI(companyName, productName, subProduct, versionInformation);
-}
+        const auto iter = Labels.find(error);
+        assert(iter != Labels.end());
+        return iter->second;
+    }
 
-const std::wstring &WinToast::strerror(WinToastError error) {
-    static const std::unordered_map<WinToastError, std::wstring> Labels = {
-            {WinToastError::NoError,               L"No error. The process was executed correctly"},
-            {WinToastError::NotInitialized,        L"The library has not been initialized"},
-            {WinToastError::SystemNotSupported,    L"The OS does not support WinToast"},
-            {WinToastError::ShellLinkNotCreated,   L"The library was not able to create a Shell Link for the app"},
-            {WinToastError::InvalidAppUserModelID, L"The AUMI is not a valid one"},
-            {WinToastError::InvalidParameters,     L"The parameters used to configure the library are not valid normally because an invalid AUMI or App Name"},
-            {WinToastError::NotDisplayed,          L"The toast was created correctly but WinToast was not able to display the toast"},
-            {WinToastError::UnknownError,          L"Unknown error"}
-    };
+    enum ShortcutResult createShortcut() {
+        return winToastImpl.createShortcut();
+    }
 
-    const auto iter = Labels.find(error);
-    assert(iter != Labels.end());
-    return iter->second;
-}
+    bool initialize(WinToastError *error) {
+        return winToastImpl.initialize(error);
+    }
 
-enum WinToast::ShortcutResult WinToast::createShortcut() {
-    return winToastImpl.createShortcut();
-}
+    bool isInitialized() {
+        return winToastImpl.isInitialized();
+    }
 
-bool WinToast::initialize(WinToastError *error) {
-    return winToastImpl.initialize(error);
-}
+    const std::wstring &appName() {
+        return winToastImpl.appName();
+    }
 
-bool WinToast::isInitialized() const {
-    return winToastImpl.isInitialized();
-}
+    const std::wstring &appUserModelId() {
+        return winToastImpl.appUserModelId();
+    }
 
-const std::wstring &WinToast::appName() const {
-    return winToastImpl.appName();
-}
+    INT64 showToast(const WinToastTemplate &toast, IWinToastHandler *handler, WinToastError *error) {
+        return winToastImpl.showToast(toast, handler, error);
+    }
 
-const std::wstring &WinToast::appUserModelId() const {
-    return winToastImpl.appUserModelId();
-}
+    bool hideToast(INT64 id) {
+        return winToastImpl.hideToast(id);
+    }
 
-INT64 WinToast::showToast(const WinToastTemplate &toast, IWinToastHandler *handler, WinToastError *error) {
-    return winToastImpl.showToast(toast, handler, error);
-}
+    void clear() {
+        winToastImpl.clear();
+    }
 
-bool WinToast::hideToast(INT64 id) {
-    return winToastImpl.hideToast(id);
-}
-
-void WinToast::clear() {
-    winToastImpl.clear();
 }
 
 WinToastTemplate::WinToastTemplate(WinToastTemplateType type) : _type(type) {
