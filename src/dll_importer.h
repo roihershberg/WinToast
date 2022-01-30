@@ -43,7 +43,7 @@ namespace DllImporter {
     static f_SetCurrentProcessExplicitAppUserModelID SetCurrentProcessExplicitAppUserModelID;
     static f_PropVariantToString PropVariantToString;
 
-    inline HRESULT initialize() {
+    inline bool initialize() {
         HINSTANCE LibShell32 = LoadLibraryW(L"SHELL32.DLL");
         HRESULT hr = loadFunctionFromLibrary(LibShell32, "SetCurrentProcessExplicitAppUserModelID",
                                              SetCurrentProcessExplicitAppUserModelID);
@@ -51,7 +51,8 @@ namespace DllImporter {
             HINSTANCE LibPropSys = LoadLibraryW(L"PROPSYS.DLL");
             hr = loadFunctionFromLibrary(LibPropSys, "PropVariantToString", PropVariantToString);
         }
-        return hr;
+
+        return SUCCEEDED(hr);
     }
 }
 
