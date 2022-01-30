@@ -260,11 +260,11 @@ std::wstring WinToastImpl::configureAUMI(_In_ const std::wstring &companyName,
                                          _In_ const std::wstring &productName,
                                          _In_ const std::wstring &subProduct,
                                          _In_ const std::wstring &versionInformation) {
-    std::wstring aumi = companyName;
+    std::wstring aumi{companyName};
     aumi += L"." + productName;
-    if (subProduct.length() > 0) {
+    if (!subProduct.empty()) {
         aumi += L"." + subProduct;
-        if (versionInformation.length() > 0) {
+        if (!versionInformation.empty()) {
             aumi += L"." + versionInformation;
         }
     }
