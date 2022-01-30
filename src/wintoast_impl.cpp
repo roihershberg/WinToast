@@ -540,10 +540,12 @@ INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToas
         if (toast.duration() != WinToastTemplate::Duration::System) {
             catchAndLogHresult(
                     {
-                        addDurationHelper(xmlDocument,
-                                          (toast.duration() == WinToastTemplate::Duration::Short) ? L"short" : L"long");
+                        xmlDocument.SelectSingleNode(L"//toast[1]").as<XmlElement>()
+                                .SetAttribute(L"duration",
+                                              (toast.duration() == WinToastTemplate::Duration::Short) ? L"short"
+                                                                                                      : L"long");
                     },
-                    "Error in addDurationHelper: ",
+                    "Error in showToast while setting duration: ",
                     {
                         setError(error, WinToast::WinToastError::UnknownError);
                         return -1;
@@ -680,12 +682,6 @@ void WinToastImpl::setAttributionTextFieldHelper(_In_ XmlDocument xml, _In_ cons
     XmlElement attributionElement = Util::createElement(xml, L"binding", L"text");
     attributionElement.SetAttribute(L"placement", L"attribution");
     attributionElement.InnerText(text);
-}
-
-void WinToastImpl::addDurationHelper(_In_ XmlDocument xml, _In_ const std::wstring &duration) {
-    IXmlNode toastNode = xml.SelectSingleNode(L"//toast[1]");
-    XmlElement toastElement = toastNode.as<XmlElement>();
-    toastElement.SetAttribute(L"duration", duration);
 }
 
 void WinToastImpl::addScenarioHelper(_In_ XmlDocument xml, _In_ const std::wstring &scenario) {
