@@ -41,8 +41,10 @@
 
 #ifdef NDEBUG
 #define DEBUG_MSG(str)
+#define DEBUG_ERR(str)
 #else
 #define DEBUG_MSG(str) std::wcout << str << std::endl
+#define DEBUG_ERR(str) std::wcerr << str << std::endl
 #endif
 
 #define DEFAULT_SHELL_LINKS_PATH    L"\\Microsoft\\Windows\\Start Menu\\Programs\\"
@@ -53,13 +55,13 @@
 try {                                                     \
     execute                                               \
 } catch (winrt::hresult_error const &ex) {                \
-    DEBUG_MSG(logPrefix << ex.message().c_str());         \
+    DEBUG_ERR(logPrefix << ex.message().c_str());         \
 }
 #define catchAndLogHresult_3(execute, logPrefix, onError) \
 try {                                                     \
     execute                                               \
 } catch (winrt::hresult_error const &ex) {                \
-    DEBUG_MSG(logPrefix << ex.message().c_str());         \
+    DEBUG_ERR(logPrefix << ex.message().c_str());         \
     onError                                               \
 }
 
@@ -282,19 +284,19 @@ std::wstring WinToastImpl::configureAUMI(_In_ const std::wstring &companyName,
     }
 
     if (aumi.length() > SCHAR_MAX) {
-        DEBUG_MSG("Error: max size allowed for AUMI: 128 characters.");
+        DEBUG_ERR("Error: max size allowed for AUMI: 128 characters.");
     }
     return aumi;
 }
 
 WinToast::ShortcutResult WinToastImpl::createShortcut() {
     if (_aumi.empty() || _appName.empty()) {
-        DEBUG_MSG(L"Error: App User Model Id or Appname is empty!");
+        DEBUG_ERR(L"Error: App User Model Id or Appname is empty!");
         return WinToast::ShortcutResult::SHORTCUT_MISSING_PARAMETERS;
     }
 
     if (!isCompatible()) {
-        DEBUG_MSG(L"Your OS is not compatible with this library! =(");
+        DEBUG_ERR(L"Your OS is not compatible with this library! =(");
         return WinToast::ShortcutResult::SHORTCUT_INCOMPATIBLE_OS;
     }
 
@@ -302,7 +304,7 @@ WinToast::ShortcutResult WinToastImpl::createShortcut() {
         winrt::hresult initHr = CoInitializeEx(nullptr, COINIT::COINIT_MULTITHREADED);
         if (initHr != RPC_E_CHANGED_MODE) {
             if (FAILED(initHr) && initHr != S_FALSE) {
-                DEBUG_MSG(L"Error on COM library initialization!");
+                DEBUG_ERR(L"Error on COM library initialization!");
                 return WinToast::ShortcutResult::SHORTCUT_COM_INIT_FAILURE;
             } else {
                 _hasCoInitialized = true;
@@ -336,28 +338,28 @@ bool WinToastImpl::initialize(_Out_opt_ WinToast::WinToastError *error) {
 
     if (!isCompatible()) {
         setError(error, WinToast::WinToastError::SystemNotSupported);
-        DEBUG_MSG(L"Error: system not supported.");
+        DEBUG_ERR(L"Error: system not supported.");
         return false;
     }
 
 
     if (_aumi.empty() || _appName.empty()) {
         setError(error, WinToast::WinToastError::InvalidParameters);
-        DEBUG_MSG(L"Error while initializing, did you set up a valid AUMI and App name?");
+        DEBUG_ERR(L"Error while initializing, did you set up a valid AUMI and App name?");
         return false;
     }
 
     if (_shortcutPolicy != WinToast::ShortcutPolicy::SHORTCUT_POLICY_IGNORE) {
         if ((int) createShortcut() < 0) {
             setError(error, WinToast::WinToastError::ShellLinkNotCreated);
-            DEBUG_MSG(L"Error while attaching the AUMI to the current proccess =(");
+            DEBUG_ERR(L"Error while attaching the AUMI to the current proccess =(");
             return false;
         }
     }
 
     if (FAILED(DllImporter::SetCurrentProcessExplicitAppUserModelID(_aumi.c_str()))) {
         setError(error, WinToast::WinToastError::InvalidAppUserModelID);
-        DEBUG_MSG(L"Error while attaching the AUMI to the current proccess =(");
+        DEBUG_ERR(L"Error while attaching the AUMI to the current proccess =(");
         return false;
     }
 
@@ -461,12 +463,12 @@ INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToas
     INT64 id = 0;
     if (!isInitialized()) {
         setError(error, WinToast::WinToastError::NotInitialized);
-        DEBUG_MSG("Error when launching the toast. WinToast is not initialized.");
+        DEBUG_ERR("Error when launching the toast. WinToast is not initialized.");
         return -1;
     }
     if (!handler) {
         setError(error, WinToast::WinToastError::InvalidHandler);
-        DEBUG_MSG("Error when launching the toast. Handler cannot be nullptr.");
+        DEBUG_ERR("Error when launching the toast. Handler cannot be nullptr.");
         return -1;
     }
 
@@ -647,7 +649,7 @@ INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToas
 
 bool WinToastImpl::hideToast(_In_ INT64 id) {
     if (!_isInitialized) {
-        DEBUG_MSG("Error when hiding the toast. WinToast is not initialized.");
+        DEBUG_ERR("Error when hiding the toast. WinToast is not initialized.");
         return false;
     }
 
