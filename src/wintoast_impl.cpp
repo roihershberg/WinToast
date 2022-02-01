@@ -180,11 +180,7 @@ namespace Util {
                 [eventHandler](ToastNotification, const winrt::Windows::Foundation::IInspectable inspectable) {
                     auto activatedEventArgs = winrt::unbox_value<ToastActivatedEventArgs>(inspectable);
                     std::wstring arguments{to_hstring(activatedEventArgs.Arguments())};
-                    if (!arguments.empty()) {
-                        eventHandler->toastActivated(static_cast<int>(wcstol(arguments.c_str(), nullptr, 10)));
-                    } else {
-                        eventHandler->toastActivated();
-                    }
+                    eventHandler->toastActivated(WinToastArguments(arguments));
                 });
 
         notification.Dismissed(
@@ -511,12 +507,13 @@ INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToas
             )
         }
 
-        std::array<WCHAR, 12> buf{};
         catchAndLogHresult(
                 {
                     for (std::size_t i = 0, actionsCount = toast.actionsCount(); i < actionsCount; i++) {
-                        _snwprintf_s(buf.data(), buf.size(), _TRUNCATE, L"%zd", i);
-                        addActionHelper(xmlDocument, toast.actionLabel(i), buf.data());
+                        WinToastArguments winToastArguments;
+
+                        winToastArguments[L"actionId"] = std::to_wstring(i);
+                        addActionHelper(xmlDocument, toast.actionLabel(i), winToastArguments.toString());
                     }
                 },
                 "Error in addActionHelper: ",

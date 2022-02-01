@@ -23,11 +23,47 @@
 
 #include <string>
 #include <vector>
-#include <memory>
+#include <map>
 
 typedef signed __int64 INT64, *PINT64;
 
 namespace WinToastLib {
+
+    class WinToastArguments {
+    public:
+        WinToastArguments() = default;
+
+        explicit WinToastArguments(const std::wstring &arguments);
+
+        void parse(const std::wstring &arguments);
+
+        [[nodiscard]] std::wstring toString() const;
+
+        void add(const std::wstring &key, const std::wstring &value);
+
+        bool remove(const std::wstring &key) noexcept;
+
+        [[nodiscard]] std::wstring get(const std::wstring &key) const;
+
+        [[nodiscard]] bool empty() const noexcept;
+
+        [[nodiscard]] bool contains(const std::wstring &key) const;
+
+        [[nodiscard]] std::map<std::wstring, std::wstring>::size_type size() const noexcept;
+
+        [[nodiscard]] std::map<std::wstring, std::wstring>::iterator begin() noexcept;
+
+        [[nodiscard]] std::map<std::wstring, std::wstring>::const_iterator cbegin() const noexcept;
+
+        [[nodiscard]] std::map<std::wstring, std::wstring>::iterator end() noexcept;
+
+        [[nodiscard]] std::map<std::wstring, std::wstring>::const_iterator cend() const noexcept;
+
+        std::wstring &operator[](const std::wstring &key);
+
+    private:
+        std::map<std::wstring, std::wstring> mPairs;
+    };
 
     class IWinToastHandler {
     public:
@@ -39,9 +75,7 @@ namespace WinToastLib {
 
         virtual ~IWinToastHandler() = default;
 
-        virtual void toastActivated() const = 0;
-
-        virtual void toastActivated(int actionIndex) const = 0;
+        virtual void toastActivated(const WinToastArguments &arguments) const = 0;
 
         virtual void toastDismissed(WinToastDismissalReason state) const = 0;
 

@@ -9,14 +9,14 @@ using namespace WinToastLib;
 
 class CustomHandler : public IWinToastHandler {
 public:
-    void toastActivated() const override {
-        std::wcout << L"The user clicked in this toast" << std::endl;
-        exit(0);
-    }
-
-    void toastActivated(int actionIndex) const override {
-        std::wcout << L"The user clicked on action #" << actionIndex << std::endl;
-        exit(16 + actionIndex);
+    void toastActivated(const WinToastArguments &arguments) const override {
+        if (arguments.contains(L"actionId")) {
+            std::wcout << L"The user clicked on action #" << arguments.get(L"actionId") << std::endl;
+            exit(16);
+        } else {
+            std::wcout << L"The user clicked on this toast" << std::endl;
+            exit(0);
+        }
     }
 
     void toastDismissed(WinToastDismissalReason state) const override {
