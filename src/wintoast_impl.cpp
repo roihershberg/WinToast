@@ -282,18 +282,6 @@ WinToast::ShortcutResult WinToastImpl::createShortcut() {
         return WinToast::ShortcutResult::SHORTCUT_INCOMPATIBLE_OS;
     }
 
-    if (!_hasCoInitialized) {
-        winrt::hresult initHr = CoInitializeEx(nullptr, COINIT::COINIT_MULTITHREADED);
-        if (initHr != RPC_E_CHANGED_MODE) {
-            if (FAILED(initHr) && initHr != S_FALSE) {
-                DEBUG_ERR(L"Error on COM library initialization!");
-                return WinToast::ShortcutResult::SHORTCUT_COM_INIT_FAILURE;
-            } else {
-                _hasCoInitialized = true;
-            }
-        }
-    }
-
     bool wasChanged;
     catchAndLogHresult(
             {
@@ -324,11 +312,24 @@ bool WinToastImpl::initialize(_Out_opt_ WinToast::WinToastError *error) {
         return false;
     }
 
-
     if (_aumi.empty() || _appName.empty()) {
         setError(error, WinToast::WinToastError::InvalidParameters);
         DEBUG_ERR(L"Error while initializing, did you set up a valid AUMI and App name?");
         return false;
+    }
+
+    if (!_hasCoInitialized) {
+        catchAndLogHresult(
+                {
+                    winrt::init_apartment();
+                    _hasCoInitialized = true;
+                },
+                "Error while trying to initialize the apartment: ",
+                {
+                    setError(error, WinToast::WinToastError::ApartmentInitError);
+                    return false;
+                }
+        )
     }
 
     if (_shortcutPolicy != WinToast::ShortcutPolicy::SHORTCUT_POLICY_IGNORE) {

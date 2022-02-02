@@ -213,6 +213,7 @@ namespace WinToastLib {
             NoError = 0,
             NotInitialized,
             SystemNotSupported,
+            ApartmentInitError,
             ShellLinkNotCreated,
             InvalidAppUserModelID,
             InvalidParameters,
@@ -228,8 +229,7 @@ namespace WinToastLib {
 
             SHORTCUT_MISSING_PARAMETERS = -1,
             SHORTCUT_INCOMPATIBLE_OS = -2,
-            SHORTCUT_COM_INIT_FAILURE = -3,
-            SHORTCUT_CREATE_FAILED = -4
+            SHORTCUT_CREATE_FAILED = -3
         };
 
         enum class ShortcutPolicy {

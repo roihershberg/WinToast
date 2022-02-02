@@ -64,6 +64,7 @@ namespace WinToastLib::WinToast {
                 {WinToastError::NoError,               L"No error. The process was executed correctly"},
                 {WinToastError::NotInitialized,        L"The library has not been initialized"},
                 {WinToastError::SystemNotSupported,    L"The OS does not support WinToast"},
+                {WinToastError::ApartmentInitError,    L"Failed to initialize apartment"},
                 {WinToastError::ShellLinkNotCreated,   L"The library was not able to create a Shell Link for the app"},
                 {WinToastError::InvalidAppUserModelID, L"The AUMI is not a valid one"},
                 {WinToastError::InvalidParameters,     L"The parameters used to configure the library are not valid normally because an invalid AUMI or App Name"},
