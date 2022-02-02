@@ -25,17 +25,16 @@
 #include <Psapi.h>
 #include <propvarutil.h>
 #include <functiondiscoverykeys.h>
+#include <VersionHelpers.h>
 
 #include <iostream>
 #include <memory>
 #include <cassert>
 #include <array>
 #include <string_view>
-#include <functional>
-
-#include "dll_importer.h"
 
 #pragma comment(lib, "shlwapi")
+#pragma comment(lib, "propsys")
 #pragma comment(lib, "user32")
 #pragma comment(lib, "windowsapp")
 
@@ -243,8 +242,7 @@ void WinToastImpl::setShortcutPolicy(_In_ WinToast::ShortcutPolicy shortcutPolic
 }
 
 bool WinToastImpl::isCompatible() {
-    return DllImporter::initialize() && DllImporter::SetCurrentProcessExplicitAppUserModelID
-           && DllImporter::PropVariantToString;
+    return IsWindows8OrGreater();
 }
 
 bool WinToastImpl::isSupportingModernFeatures() {
@@ -340,7 +338,7 @@ bool WinToastImpl::initialize(_Out_opt_ WinToast::WinToastError *error) {
         }
     }
 
-    if (FAILED(DllImporter::SetCurrentProcessExplicitAppUserModelID(_aumi.c_str()))) {
+    if (FAILED(SetCurrentProcessExplicitAppUserModelID(_aumi.c_str()))) {
         setError(error, WinToast::WinToastError::InvalidAppUserModelID);
         DEBUG_ERR(L"Error while attaching the AUMI to the current proccess =(");
         return false;
@@ -390,7 +388,7 @@ void WinToastImpl::validateShellLinkHelper(_Out_ bool &wasChanged) {
     PROPVARIANT appIdPropVar;
     winrt::check_hresult(propertyStore->GetValue(PKEY_AppUserModel_ID, &appIdPropVar));
     WCHAR AUMI[MAX_PATH];
-    winrt::check_hresult(DllImporter::PropVariantToString(appIdPropVar, AUMI, MAX_PATH));
+    winrt::check_hresult(PropVariantToString(appIdPropVar, AUMI, MAX_PATH));
     PropVariantClear(&appIdPropVar);
 
     wasChanged = false;
