@@ -74,6 +74,19 @@ using namespace WinToastLib;
 using namespace winrt::Windows::UI::Notifications;
 using namespace winrt::Windows::Data::Xml::Dom;
 
+struct prop_variant : PROPVARIANT {
+    prop_variant() noexcept: PROPVARIANT{} {
+    }
+
+    ~prop_variant() noexcept {
+        clear();
+    }
+
+    void clear() noexcept {
+        WINRT_VERIFY_(S_OK, PropVariantClear(this));
+    }
+};
+
 inline IWinToastHandler::WinToastDismissalReason getWinToastDismissalReason(const ToastDismissalReason reason) {
     switch (reason) {
         case ToastDismissalReason::UserCanceled:
@@ -381,15 +394,15 @@ void WinToastImpl::validateShellLinkHelper(_Out_ bool &wasChanged) {
     winrt::com_ptr<IShellLink> shellLink;
     winrt::check_hresult(CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&shellLink)));
 
-    winrt::com_ptr<IPersistFile> persistFile = shellLink.as<IPersistFile>();
+    auto persistFile = shellLink.as<IPersistFile>();
     winrt::check_hresult(persistFile->Load(path, STGM_READWRITE));
 
-    winrt::com_ptr<IPropertyStore> propertyStore = shellLink.as<IPropertyStore>();
-    PROPVARIANT appIdPropVar;
+    auto propertyStore = shellLink.as<IPropertyStore>();
+    prop_variant appIdPropVar;
     winrt::check_hresult(propertyStore->GetValue(PKEY_AppUserModel_ID, &appIdPropVar));
     WCHAR AUMI[MAX_PATH];
     winrt::check_hresult(PropVariantToString(appIdPropVar, AUMI, MAX_PATH));
-    PropVariantClear(&appIdPropVar);
+    appIdPropVar.clear();
 
     wasChanged = false;
     if (_aumi != AUMI) {
@@ -398,6 +411,7 @@ void WinToastImpl::validateShellLinkHelper(_Out_ bool &wasChanged) {
             wasChanged = true;
             winrt::check_hresult(InitPropVariantFromString(_aumi.c_str(), &appIdPropVar));
             winrt::check_hresult(propertyStore->SetValue(PKEY_AppUserModel_ID, appIdPropVar));
+            appIdPropVar.clear();
             winrt::check_hresult(propertyStore->Commit());
             winrt::check_hresult(persistFile->IsDirty());
             winrt::check_hresult(persistFile->Save(path, TRUE));
@@ -428,10 +442,10 @@ void WinToastImpl::createShellLinkHelper() {
     winrt::check_hresult(shellLink->SetWorkingDirectory(exePath));
 
     winrt::com_ptr<IPropertyStore> propertyStore = shellLink.as<IPropertyStore>();
-    PROPVARIANT appIdPropVar;
+    prop_variant appIdPropVar;
     winrt::check_hresult(InitPropVariantFromString(_aumi.c_str(), &appIdPropVar));
     winrt::check_hresult(propertyStore->SetValue(PKEY_AppUserModel_ID, appIdPropVar));
-    PropVariantClear(&appIdPropVar);
+    appIdPropVar.clear();
     winrt::check_hresult(propertyStore->Commit());
 
     winrt::com_ptr<IPersistFile> persistFile = shellLink.as<IPersistFile>();
