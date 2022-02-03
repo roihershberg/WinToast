@@ -234,12 +234,6 @@ WinToastImpl::WinToastImpl() :
     }
 }
 
-WinToastImpl::~WinToastImpl() {
-    if (_hasCoInitialized) {
-        CoUninitialize();
-    }
-}
-
 void WinToastImpl::setAppName(_In_ const std::wstring &appName) {
     _appName = appName;
 }

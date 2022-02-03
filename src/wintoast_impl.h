@@ -36,8 +36,6 @@ namespace WinToastLib {
     public:
         WinToastImpl();
 
-        ~WinToastImpl();
-
         [[nodiscard]] static WinToastImpl &instance();
 
         [[nodiscard]] static bool isCompatible();
