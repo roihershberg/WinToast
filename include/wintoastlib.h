@@ -24,6 +24,9 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <functional>
+
+#define TOAST_ACTIVATED_LAUNCH_ARG "-ToastActivated"
 
 typedef signed __int64 INT64, *PINT64;
 
@@ -63,23 +66,6 @@ namespace WinToastLib {
 
     private:
         std::map<std::wstring, std::wstring> mPairs;
-    };
-
-    class IWinToastHandler {
-    public:
-        enum class WinToastDismissalReason {
-            UserCanceled,
-            ApplicationHidden,
-            TimedOut,
-        };
-
-        virtual ~IWinToastHandler() = default;
-
-        virtual void toastActivated(const WinToastArguments &arguments) const = 0;
-
-        virtual void toastDismissed(WinToastDismissalReason state) const = 0;
-
-        virtual void toastFailed() const = 0;
     };
 
     class WinToastTemplate {
@@ -247,20 +233,22 @@ namespace WinToastLib {
         [[nodiscard]] bool isSupportingModernFeatures();
 
         [[nodiscard]] std::wstring configureAUMI(const std::wstring &companyName,
-                                                        const std::wstring &productName,
-                                                        const std::wstring &subProduct = std::wstring(),
-                                                        const std::wstring &versionInformation = std::wstring());
+                                                 const std::wstring &productName,
+                                                 const std::wstring &subProduct = std::wstring(),
+                                                 const std::wstring &versionInformation = std::wstring());
 
         [[nodiscard]] const std::wstring &strerror(WinToastError error);
 
         bool initialize(WinToastError *error = nullptr);
+
+        void uninstall();
 
         [[nodiscard]] bool isInitialized();
 
         bool hideToast(INT64 id);
 
         INT64
-        showToast(const WinToastTemplate &toast, IWinToastHandler *handler, WinToastError *error = nullptr);
+        showToast(const WinToastTemplate &toast, WinToastError *error = nullptr);
 
         void clear();
 
@@ -270,11 +258,23 @@ namespace WinToastLib {
 
         [[nodiscard]] const std::wstring &appUserModelId();
 
+        [[nodiscard]] const std::wstring &iconPath();
+
+        [[nodiscard]] const std::wstring &iconBackgroundColor();
+
         void setAppUserModelId(const std::wstring &aumi);
 
         void setAppName(const std::wstring &appName);
 
+        void setIconPath(const std::wstring &iconPath);
+
+        void setIconBackgroundColor(const std::wstring &iconBackgroundColor);
+
         void setShortcutPolicy(ShortcutPolicy policy);
+
+        void setOnActivated(
+                const std::function<void(const WinToastArguments &,
+                                         const std::map<std::wstring, std::wstring> &)> &callback);
     }
 }
 

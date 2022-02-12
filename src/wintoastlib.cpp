@@ -40,8 +40,22 @@ namespace WinToastLib::WinToast {
         winToastImpl.setAppUserModelId(aumi);
     }
 
+    void setIconPath(const std::wstring &iconPath) {
+        winToastImpl.setIconPath(iconPath);
+    }
+
+    void setIconBackgroundColor(const std::wstring &iconBackgroundColor) {
+        winToastImpl.setIconBackgroundColor(iconBackgroundColor);
+    }
+
     void setShortcutPolicy(ShortcutPolicy shortcutPolicy) {
         winToastImpl.setShortcutPolicy(shortcutPolicy);
+    }
+
+    void setOnActivated(
+            const std::function<void(const WinToastArguments &,
+                                     const std::map<std::wstring, std::wstring> &)> &callback) {
+        winToastImpl.setOnActivated(callback);
     }
 
     bool isCompatible() {
@@ -85,6 +99,10 @@ namespace WinToastLib::WinToast {
         return winToastImpl.initialize(error);
     }
 
+    void uninstall() {
+        winToastImpl.uninstall();
+    }
+
     bool isInitialized() {
         return winToastImpl.isInitialized();
     }
@@ -97,8 +115,16 @@ namespace WinToastLib::WinToast {
         return winToastImpl.appUserModelId();
     }
 
-    INT64 showToast(const WinToastTemplate &toast, IWinToastHandler *handler, WinToastError *error) {
-        return winToastImpl.showToast(toast, handler, error);
+    const std::wstring &iconPath() {
+        return winToastImpl.iconPath();
+    }
+
+    const std::wstring &iconBackgroundColor() {
+        return winToastImpl.iconBackgroundColor();
+    }
+
+    INT64 showToast(const WinToastTemplate &toast, WinToastError *error) {
+        return winToastImpl.showToast(toast, error);
     }
 
     bool hideToast(INT64 id) {

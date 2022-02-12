@@ -27,6 +27,7 @@
 #include <winrt/Windows.UI.Notifications.h>
 
 #include <map>
+#include <functional>
 
 #include "wintoastlib.h"
 
@@ -43,18 +44,19 @@ namespace WinToastLib {
         [[nodiscard]] static bool isSupportingModernFeatures();
 
         [[nodiscard]] static std::wstring configureAUMI(_In_ const std::wstring &companyName,
-                                          _In_ const std::wstring &productName,
-                                          _In_ const std::wstring &subProduct = std::wstring(),
-                                          _In_ const std::wstring &versionInformation = std::wstring());
+                                                        _In_ const std::wstring &productName,
+                                                        _In_ const std::wstring &subProduct = std::wstring(),
+                                                        _In_ const std::wstring &versionInformation = std::wstring());
 
         bool initialize(_Out_opt_ WinToast::WinToastError *error = nullptr);
+
+        void uninstall();
 
         [[nodiscard]] bool isInitialized() const;
 
         bool hideToast(_In_ INT64 id);
 
-        INT64 showToast(_In_ const WinToastTemplate &toast, _In_ IWinToastHandler *handler, _Out_opt_
-                                WinToast::WinToastError *error = nullptr);
+        INT64 showToast(_In_ const WinToastTemplate &toast, _Out_opt_ WinToast::WinToastError *error = nullptr);
 
         void clear();
 
@@ -64,11 +66,23 @@ namespace WinToastLib {
 
         [[nodiscard]] const std::wstring &appUserModelId() const;
 
+        [[nodiscard]] const std::wstring &iconPath() const;
+
+        [[nodiscard]] const std::wstring &iconBackgroundColor() const;
+
         void setAppUserModelId(_In_ const std::wstring &aumi);
 
         void setAppName(_In_ const std::wstring &appName);
 
+        void setIconPath(_In_ const std::wstring &iconPath);
+
+        void setIconBackgroundColor(_In_ const std::wstring &iconBackgroundColor);
+
         void setShortcutPolicy(_In_ WinToast::ShortcutPolicy policy);
+
+        void setOnActivated(
+                const std::function<void(const WinToastArguments &,
+                                         const std::map<std::wstring, std::wstring> &)> &callback);
 
     private:
         bool _isInitialized{false};
@@ -76,7 +90,12 @@ namespace WinToastLib {
         WinToast::ShortcutPolicy _shortcutPolicy{WinToast::ShortcutPolicy::SHORTCUT_POLICY_REQUIRE_CREATE};
         std::wstring _appName{};
         std::wstring _aumi{};
+        std::wstring _clsid{};
+        std::wstring _iconPath{};
+        std::wstring _iconBackgroundColor{};
         std::map<INT64, winrt::Windows::UI::Notifications::ToastNotification> _buffer{};
+
+        void createAndRegisterActivator();
 
         void validateShellLinkHelper(_Out_ bool &wasChanged);
 

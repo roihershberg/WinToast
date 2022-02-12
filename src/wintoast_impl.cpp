@@ -26,6 +26,8 @@
 #include <propvarutil.h>
 #include <functiondiscoverykeys.h>
 #include <VersionHelpers.h>
+#include <NotificationActivationCallback.h>
+#include <winrt/Windows.Foundation.Collections.h>
 
 #include <iostream>
 #include <memory>
@@ -74,6 +76,8 @@ using namespace WinToastLib;
 using namespace winrt::Windows::UI::Notifications;
 using namespace winrt::Windows::Data::Xml::Dom;
 
+std::function<void(const WinToastArguments &, const std::map<std::wstring, std::wstring> &)> onActivated;
+
 struct prop_variant : PROPVARIANT {
     prop_variant() noexcept: PROPVARIANT{} {
     }
@@ -87,43 +91,54 @@ struct prop_variant : PROPVARIANT {
     }
 };
 
-inline IWinToastHandler::WinToastDismissalReason getWinToastDismissalReason(const ToastDismissalReason reason) {
-    switch (reason) {
-        case ToastDismissalReason::UserCanceled:
-            return IWinToastHandler::WinToastDismissalReason::UserCanceled;
-        case ToastDismissalReason::ApplicationHidden:
-            return IWinToastHandler::WinToastDismissalReason::ApplicationHidden;
-        case ToastDismissalReason::TimedOut:
-        default:
-            return IWinToastHandler::WinToastDismissalReason::TimedOut;
-    }
-}
+// https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/author-coclasses#implement-the-coclass-and-class-factory
+struct callback : winrt::implements<callback, INotificationActivationCallback> {
+    HRESULT __stdcall Activate(
+            LPCWSTR appUserModelId,
+            LPCWSTR invokedArgs,
+            [[maybe_unused]] NOTIFICATION_USER_INPUT_DATA const *data,
+            [[maybe_unused]] ULONG dataCount) noexcept {
+        if (onActivated != nullptr) {
+            try {
+                WinToastArguments arguments(invokedArgs);
 
-inline ToastTemplateType getToastTemplateType(const WinToastTemplate::WinToastTemplateType type) {
-    switch (type) {
-        case WinToastTemplate::WinToastTemplateType::ImageAndText01:
-            return ToastTemplateType::ToastImageAndText01;
-        case WinToastTemplate::WinToastTemplateType::ImageAndText02:
-            return ToastTemplateType::ToastImageAndText02;
-        case WinToastTemplate::WinToastTemplateType::ImageAndText03:
-            return ToastTemplateType::ToastImageAndText03;
-        case WinToastTemplate::WinToastTemplateType::ImageAndText04:
-            return ToastTemplateType::ToastImageAndText04;
-        case WinToastTemplate::WinToastTemplateType::Text01:
-            return ToastTemplateType::ToastText01;
-        case WinToastTemplate::WinToastTemplateType::Text02:
-            return ToastTemplateType::ToastText02;
-        case WinToastTemplate::WinToastTemplateType::Text03:
-            return ToastTemplateType::ToastText03;
-        case WinToastTemplate::WinToastTemplateType::Text04:
-            return ToastTemplateType::ToastText04;
-        default:
-            winrt::throw_hresult(E_INVALIDARG);
-    }
-}
+                std::map<std::wstring, std::wstring> userInput;
 
-// Quickstart: Handling toast activations from Win32 apps in Windows 10
-// https://blogs.msdn.microsoft.com/tiles_and_toasts/2015/10/16/quickstart-handling-toast-activations-from-win32-apps-in-windows-10/
+                for (int i = 0; i < dataCount; i++) {
+                    userInput[data[i].Key] = data[i].Value;
+                }
+
+                onActivated(arguments, userInput);
+            } catch (const winrt::hresult_error &ex) {
+                DEBUG_ERR("Error in Activate callback: " << ex.message().c_str());
+            } catch (const std::exception &ex) {
+                DEBUG_ERR("Error in Activate callback: " << ex.what());
+            }
+        }
+
+        return S_OK;
+    }
+};
+
+struct callback_factory : winrt::implements<callback_factory, IClassFactory> {
+    HRESULT __stdcall CreateInstance(
+            IUnknown *outer,
+            GUID const &iid,
+            void **result) noexcept {
+        *result = nullptr;
+
+        if (outer) {
+            return CLASS_E_NOAGGREGATION;
+        }
+
+        return winrt::make<callback>()->QueryInterface(iid, result);
+    }
+
+    HRESULT __stdcall LockServer(BOOL) noexcept {
+        return S_OK;
+    }
+};
+
 namespace Util {
 
     typedef LONG NTSTATUS, *PNTSTATUS;
@@ -150,6 +165,78 @@ namespace Util {
         FILETIME now;
         GetSystemTimeAsFileTime(&now);
         return ((((INT64) now.dwHighDateTime) << 32) | now.dwLowDateTime);
+    }
+
+    inline ToastTemplateType getToastTemplateType(const WinToastTemplate::WinToastTemplateType type) {
+        switch (type) {
+            case WinToastTemplate::WinToastTemplateType::ImageAndText01:
+                return ToastTemplateType::ToastImageAndText01;
+            case WinToastTemplate::WinToastTemplateType::ImageAndText02:
+                return ToastTemplateType::ToastImageAndText02;
+            case WinToastTemplate::WinToastTemplateType::ImageAndText03:
+                return ToastTemplateType::ToastImageAndText03;
+            case WinToastTemplate::WinToastTemplateType::ImageAndText04:
+                return ToastTemplateType::ToastImageAndText04;
+            case WinToastTemplate::WinToastTemplateType::Text01:
+                return ToastTemplateType::ToastText01;
+            case WinToastTemplate::WinToastTemplateType::Text02:
+                return ToastTemplateType::ToastText02;
+            case WinToastTemplate::WinToastTemplateType::Text03:
+                return ToastTemplateType::ToastText03;
+            case WinToastTemplate::WinToastTemplateType::Text04:
+                return ToastTemplateType::ToastText04;
+            default:
+                winrt::throw_hresult(E_INVALIDARG);
+        }
+    }
+
+    std::wstring generateGuid(const std::wstring &name) {
+        // From https://github.com/WindowsNotifications/desktop-toasts/blob/master/CPP-WINRT/DesktopToastsCppWinRtApp/DesktopNotificationManagerCompat.cpp
+        wchar_t const *bytes = name.c_str();
+
+        if (name.length() <= 16) {
+            wchar_t guid[36];
+            swprintf_s(
+                    guid,
+                    36,
+                    L"%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+                    name[0], name[1], name[2], name[3], name[4], name[5], name[6], name[7], name[8], name[9], name[10],
+                    name[11], name[12], name[13], name[14], name[15]);
+            return guid;
+        } else {
+            std::size_t hash = std::hash<std::wstring>{}(name);
+
+            // Only ever at most 20 chars long
+            std::wstring hashStr = std::to_wstring(hash);
+
+            wchar_t guid[37];
+            for (int i = 0; i < 36; i++) {
+                if (i == 8 || i == 13 || i == 18 || i == 23) {
+                    guid[i] = '-';
+                } else {
+                    int strPos = i;
+                    if (i > 23) {
+                        strPos -= 4;
+                    } else if (i > 18) {
+                        strPos -= 3;
+                    } else if (i > 13) {
+                        strPos -= 2;
+                    } else if (i > 8) {
+                        strPos -= 1;
+                    }
+
+                    if (strPos < hashStr.length()) {
+                        guid[i] = hashStr[strPos];
+                    } else {
+                        guid[i] = '0';
+                    }
+                }
+            }
+
+            guid[36] = '\0';
+
+            return guid;
+        }
     }
 
     inline void defaultExecutablePath(_In_ WCHAR *path, _In_ DWORD nSize = MAX_PATH) {
@@ -185,32 +272,6 @@ namespace Util {
         DEBUG_MSG("Default shell link file path: " << path);
     }
 
-    inline void
-    setEventHandlers(_In_ ToastNotification notification, _In_ const std::shared_ptr<IWinToastHandler> &eventHandler,
-                     _In_ INT64 expirationTime) {
-        notification.Activated(
-                [eventHandler](ToastNotification, const winrt::Windows::Foundation::IInspectable inspectable) {
-                    auto activatedEventArgs = winrt::unbox_value<ToastActivatedEventArgs>(inspectable);
-                    std::wstring arguments{to_hstring(activatedEventArgs.Arguments())};
-                    eventHandler->toastActivated(WinToastArguments(arguments));
-                });
-
-        notification.Dismissed(
-                [eventHandler, expirationTime](ToastNotification,
-                                               const winrt::Windows::Foundation::IInspectable inspectable) {
-                    auto dismissedEventArgs = winrt::unbox_value<ToastDismissedEventArgs>(inspectable);
-                    ToastDismissalReason reason = dismissedEventArgs.Reason();
-                    if (reason == ToastDismissalReason::UserCanceled && expirationTime &&
-                        fileTimeNow() >= expirationTime)
-                        reason = ToastDismissalReason::TimedOut;
-                    eventHandler->toastDismissed(getWinToastDismissalReason(reason));
-                });
-
-        notification.Failed([eventHandler](auto &&...) {
-            eventHandler->toastFailed();
-        });
-    }
-
     inline XmlElement
     createElement(_In_ XmlDocument xml, _In_ const std::wstring &root_node, _In_ const std::wstring &element_name) {
         IXmlNode root = xml.SelectSingleNode(L"//" + root_node + L"[1]");
@@ -218,6 +279,30 @@ namespace Util {
         root.AppendChild(element);
 
         return element;
+    }
+
+    inline void setRegistryKeyValue(HKEY hKey, const std::wstring &subKey, const std::wstring &valueName,
+                                    const std::wstring &value) {
+        winrt::check_win32(::RegSetKeyValueW(
+                hKey,
+                subKey.c_str(),
+                valueName.empty() ? nullptr : valueName.c_str(),
+                REG_SZ,
+                reinterpret_cast<const BYTE *>(value.c_str()),
+                static_cast<DWORD>((value.length() + 1) * sizeof(WCHAR))));
+    }
+
+    inline void deleteRegistryKeyValue(HKEY hKey, const std::wstring &subKey, const std::wstring &valueName) {
+        winrt::check_win32(::RegDeleteKeyValueW(
+                hKey,
+                subKey.c_str(),
+                valueName.c_str()));
+    }
+
+    inline void deleteRegistryKey(HKEY hKey, const std::wstring &subKey) {
+        winrt::check_win32(::RegDeleteKeyW(
+                hKey,
+                subKey.c_str()));
     }
 }
 
@@ -244,8 +329,21 @@ void WinToastImpl::setAppUserModelId(_In_ const std::wstring &aumi) {
     DEBUG_MSG("App User Model Id: " << _aumi.c_str());
 }
 
+void WinToastImpl::setIconPath(_In_ const std::wstring &iconPath) {
+    _iconPath = iconPath;
+}
+
+void WinToastImpl::setIconBackgroundColor(_In_ const std::wstring &iconBackgroundColor) {
+    _iconBackgroundColor = iconBackgroundColor;
+}
+
 void WinToastImpl::setShortcutPolicy(_In_ WinToast::ShortcutPolicy shortcutPolicy) {
     _shortcutPolicy = shortcutPolicy;
+}
+
+void WinToastImpl::setOnActivated(
+        const std::function<void(const WinToastArguments &, const std::map<std::wstring, std::wstring> &)> &callback) {
+    onActivated = callback;
 }
 
 bool WinToastImpl::isCompatible() {
@@ -308,18 +406,20 @@ WinToast::ShortcutResult WinToastImpl::createShortcut() {
 }
 
 bool WinToastImpl::initialize(_Out_opt_ WinToast::WinToastError *error) {
-    _isInitialized = false;
+    _isInitialized = true;
     setError(error, WinToast::WinToastError::NoError);
 
     if (!isCompatible()) {
         setError(error, WinToast::WinToastError::SystemNotSupported);
         DEBUG_ERR(L"Error: system not supported.");
+        _isInitialized = false;
         return false;
     }
 
     if (_aumi.empty() || _appName.empty()) {
         setError(error, WinToast::WinToastError::InvalidParameters);
         DEBUG_ERR(L"Error while initializing, did you set up a valid AUMI and App name?");
+        _isInitialized = false;
         return false;
     }
 
@@ -332,6 +432,7 @@ bool WinToastImpl::initialize(_Out_opt_ WinToast::WinToastError *error) {
                 "Error while trying to initialize the apartment: ",
                 {
                     setError(error, WinToast::WinToastError::ApartmentInitError);
+                    _isInitialized = false;
                     return false;
                 }
         )
@@ -341,6 +442,7 @@ bool WinToastImpl::initialize(_Out_opt_ WinToast::WinToastError *error) {
         if ((int) createShortcut() < 0) {
             setError(error, WinToast::WinToastError::ShellLinkNotCreated);
             DEBUG_ERR(L"Error while attaching the AUMI to the current proccess =(");
+            _isInitialized = false;
             return false;
         }
     }
@@ -348,11 +450,100 @@ bool WinToastImpl::initialize(_Out_opt_ WinToast::WinToastError *error) {
     if (FAILED(SetCurrentProcessExplicitAppUserModelID(_aumi.c_str()))) {
         setError(error, WinToast::WinToastError::InvalidAppUserModelID);
         DEBUG_ERR(L"Error while attaching the AUMI to the current proccess =(");
+        _isInitialized = false;
         return false;
     }
 
-    _isInitialized = true;
-    return _isInitialized;
+    catchAndLogHresult(
+            {
+                createAndRegisterActivator();
+            },
+            "Error while trying to create and register Activator: ",
+            {
+                setError(error, WinToast::WinToastError::UnknownError);
+                _isInitialized = false;
+                return false;
+            }
+    )
+
+    catchAndLogHresult(
+            {
+                std::wstring subKey = LR"(SOFTWARE\Classes\AppUserModelId\)" + _aumi;
+                Util::setRegistryKeyValue(HKEY_CURRENT_USER, subKey, L"DisplayName", _appName);
+
+                if (!_iconPath.empty()) {
+                    Util::setRegistryKeyValue(HKEY_CURRENT_USER, subKey, L"IconUri", L"file:///" + _iconPath);
+                } else {
+                    try {
+                        Util::deleteRegistryKeyValue(HKEY_CURRENT_USER, subKey, L"IconUri");
+                    } catch (const winrt::hresult_error &ex) {
+                        DEBUG_MSG(
+                                "Failed to delete IconUri registry key. Probably iconUri wasn't set before.\n\tError message: "
+                                        << ex.message().c_str());
+                    }
+                }
+
+                // Background color only appears in the settings page, format is
+                // hex without leading #, like "FFDDDDDD"
+                if (!_iconBackgroundColor.empty()) {
+                    Util::setRegistryKeyValue(HKEY_CURRENT_USER, subKey, L"IconBackgroundColor", _iconBackgroundColor);
+                } else {
+                    try {
+                        Util::deleteRegistryKeyValue(HKEY_CURRENT_USER, subKey, L"IconBackgroundColor");
+                    } catch (const winrt::hresult_error &ex) {
+                        DEBUG_MSG(
+                                "Failed to delete IconBackgroundColor registry key. Probably iconBackgroundColor wasn't set before.\n\tError message: "
+                                        << ex.message().c_str());
+                    }
+                }
+
+                Util::setRegistryKeyValue(HKEY_CURRENT_USER, subKey, L"CustomActivator", L"{" + _clsid + L"}");
+            },
+            "Error while trying to set registry values: ",
+            {
+                setError(error, WinToast::WinToastError::UnknownError);
+                _isInitialized = false;
+                return false;
+            }
+    )
+
+    return true;
+}
+
+void WinToastImpl::uninstall() {
+    // From https://github.com/WindowsNotifications/desktop-toasts/blob/master/CPP-WINRT/DesktopToastsCppWinRtApp/DesktopNotificationManagerCompat.cpp
+    if (!_aumi.empty()) {
+        try {
+            // Remove all scheduled notifications (do this first before clearing current notifications)
+            ToastNotifier notifier{nullptr};
+            catchAndLogHresult(
+                    { notifier = ToastNotificationManager::CreateToastNotifier(_aumi); },
+                    "Error in showToast while trying to create a notifier: ",
+                    { return; }
+            )
+            auto scheduledNotifications = notifier.GetScheduledToastNotifications();
+            UINT vectorSize = scheduledNotifications.Size();
+            for (UINT i = 0; i < vectorSize; i++) {
+                try {
+                    notifier.RemoveFromSchedule(scheduledNotifications.GetAt(i));
+                }
+                catch (...) {}
+            }
+
+            // Clear all current notifications
+            ToastNotificationManager::History().Clear(_aumi);
+
+            std::wstring subKey = LR"(SOFTWARE\Classes\AppUserModelId\)" + _aumi;
+            Util::deleteRegistryKey(HKEY_CURRENT_USER, subKey);
+            if (!_clsid.empty()) {
+                std::wstring baseSubKey = LR"(SOFTWARE\Classes\CLSID\{)" + _clsid + L"}";
+                subKey = baseSubKey + LR"(\LocalServer32)";
+                Util::deleteRegistryKey(HKEY_CURRENT_USER, subKey);
+                Util::deleteRegistryKey(HKEY_CURRENT_USER, baseSubKey);
+            }
+        }
+        catch (...) {}
+    }
 }
 
 bool WinToastImpl::isInitialized() const {
@@ -367,6 +558,42 @@ const std::wstring &WinToastImpl::appUserModelId() const {
     return _aumi;
 }
 
+const std::wstring &WinToastImpl::iconPath() const {
+    return _iconPath;
+}
+
+const std::wstring &WinToastImpl::iconBackgroundColor() const {
+    return _iconBackgroundColor;
+}
+
+void WinToastImpl::createAndRegisterActivator() {
+    // From https://github.com/WindowsNotifications/desktop-toasts/blob/master/CPP-WINRT/DesktopToastsCppWinRtApp/DesktopNotificationManagerCompat.cpp
+    DWORD registration{};
+    std::wstring clsidStr = Util::generateGuid(_aumi);
+    GUID clsid;
+    winrt::check_hresult(CLSIDFromString((L"{" + clsidStr + L"}").c_str(), &clsid));
+
+    // Register callback
+    auto result = CoRegisterClassObject(
+            clsid,
+            winrt::make<callback_factory>().get(),
+            CLSCTX_LOCAL_SERVER,
+            REGCLS_MULTIPLEUSE,
+            &registration);
+
+    // Create launch path + args
+    // Include a flag so we know this was a toast activation and should wait for COM to process
+    WCHAR exePath[MAX_PATH]{L'\0'};
+    Util::defaultExecutablePath(exePath);
+    std::string launchArg = TOAST_ACTIVATED_LAUNCH_ARG;
+    std::wstring launchArgW(launchArg.begin(), launchArg.end());
+    std::wstring launchStr = L"\"" + std::wstring(exePath) + L"\" " + launchArgW;
+
+    // Update registry with activator
+    std::wstring keyPath = LR"(SOFTWARE\Classes\CLSID\{)" + clsidStr + LR"(}\LocalServer32)";
+    Util::setRegistryKeyValue(HKEY_CURRENT_USER, keyPath, L"", launchStr);
+    _clsid = clsidStr;
+}
 
 void WinToastImpl::validateShellLinkHelper(_Out_ bool &wasChanged) {
     WCHAR path[MAX_PATH] = {L'\0'};
@@ -446,18 +673,12 @@ void WinToastImpl::createShellLinkHelper() {
     winrt::check_hresult(persistFile->Save(slPath, TRUE));
 }
 
-INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToastHandler *handler, _Out_
-                              WinToast::WinToastError *error) {
+INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _Out_ WinToast::WinToastError *error) {
     setError(error, WinToast::WinToastError::NoError);
     INT64 id = 0;
     if (!isInitialized()) {
         setError(error, WinToast::WinToastError::NotInitialized);
         DEBUG_ERR("Error when launching the toast. WinToast is not initialized.");
-        return -1;
-    }
-    if (!handler) {
-        setError(error, WinToast::WinToastError::InvalidHandler);
-        DEBUG_ERR("Error when launching the toast. Handler cannot be nullptr.");
         return -1;
     }
 
@@ -474,7 +695,7 @@ INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToas
     catchAndLogHresult(
             {
                 xmlDocument = ToastNotificationManager::GetTemplateContent(
-                        getToastTemplateType(toast.type())
+                        Util::getToastTemplateType(toast.type())
                 );
             },
             "Error in showToast while getting template content: ",
@@ -583,32 +804,19 @@ INT64 WinToastImpl::showToast(_In_ const WinToastTemplate &toast, _In_  IWinToas
     }
 
     ToastNotification notification{nullptr};
-    INT64 expiration = 0, relativeExpiration = 0;
     catchAndLogHresult(
             {
+                INT64 relativeExpiration = toast.expiration();
                 notification = xmlDocument;
-                relativeExpiration = toast.expiration();
                 if (relativeExpiration > 0) {
                     winrt::Windows::Foundation::DateTime expirationDateTime{
                             winrt::Windows::Foundation::TimeSpan(Util::fileTimeNow() + relativeExpiration * 10000)};
-                    expiration = expirationDateTime.time_since_epoch().count();
                     notification.ExpirationTime(expirationDateTime);
                 }
             },
             "Error in showToast while trying to construct the notification: ",
             {
                 setError(error, WinToast::WinToastError::UnknownError);
-                return -1;
-            }
-    )
-
-    catchAndLogHresult(
-            {
-                Util::setEventHandlers(notification, std::shared_ptr<IWinToastHandler>(handler), expiration);
-            },
-            "Error in Util::setEventHandlers: ",
-            {
-                setError(error, WinToast::WinToastError::InvalidHandler);
                 return -1;
             }
     )

@@ -7,51 +7,8 @@
 
 using namespace WinToastLib;
 
-class CustomHandler : public IWinToastHandler {
-public:
-    void toastActivated(const WinToastArguments &arguments) const override {
-        if (arguments.contains(L"actionId")) {
-            std::wcout << L"The user clicked on action #" << arguments.get(L"actionId") << std::endl;
-            exit(16);
-        } else {
-            std::wcout << L"The user clicked on this toast" << std::endl;
-            exit(0);
-        }
-    }
-
-    void toastDismissed(WinToastDismissalReason state) const override {
-        switch (state) {
-            case WinToastDismissalReason::UserCanceled:
-                std::wcout << L"The user dismissed this toast" << std::endl;
-                exit(1);
-                break;
-            case WinToastDismissalReason::TimedOut:
-                std::wcout << L"The toast has timed out" << std::endl;
-                exit(2);
-                break;
-            case WinToastDismissalReason::ApplicationHidden:
-                std::wcout << L"The application hid the toast using ToastNotifier.hide()" << std::endl;
-                exit(3);
-                break;
-            default:
-                std::wcout << L"Toast not activated" << std::endl;
-                exit(4);
-                break;
-        }
-    }
-
-    void toastFailed() const override {
-        std::wcout << L"Error showing current toast" << std::endl;
-        exit(5);
-    }
-};
-
-
 enum Results {
     ToastClicked,                    // user clicked on the toast
-    ToastDismissed,                    // user dismissed the toast
-    ToastTimeOut,                    // toast timed out
-    ToastHided,                        // application hid the toast
     ToastNotActivated,                // toast was not activated
     ToastFailed,                    // toast failed
     SystemNotSupported,                // system does not support toasts
@@ -144,6 +101,18 @@ int wmain(int argc, LPWSTR *argv) {
 
     WinToast::setAppName(appName);
     WinToast::setAppUserModelId(appUserModelID);
+    WinToast::setOnActivated(
+            [](const WinToastArguments &arguments, const std::map<std::wstring, std::wstring> &userData) {
+                if (arguments.contains(L"actionId")) {
+                    std::wcout << L"The user clicked on action #" + arguments.get(L"actionId") << std::endl;
+                    WinToast::uninstall();
+                    exit(16);
+                } else {
+                    std::wcout << L"The user clicked on the toast" << std::endl;
+                    WinToast::uninstall();
+                    exit(0);
+                }
+            });
 
     if (onlyCreateShortcut) {
         if (!imagePath.empty() || !text.empty() || !actions.empty() || expiration) {
@@ -176,14 +145,15 @@ int wmain(int argc, LPWSTR *argv) {
     if (withImage)
         templ.setImagePath(imagePath);
 
-    std::unique_ptr<CustomHandler> customHandler = std::make_unique<CustomHandler>();
-    if (WinToast::showToast(templ, customHandler.get()) < 0) {
+    if (WinToast::showToast(templ) < 0) {
         std::wcerr << L"Could not launch your toast notification!";
         return Results::ToastFailed;
     }
 
     // Give the handler a chance for 15 seconds (or the expiration plus 1 second)
     Sleep(expiration ? (DWORD) expiration + 1000 : 15000);
+
+    WinToast::uninstall();
 
     return 2;
 }
