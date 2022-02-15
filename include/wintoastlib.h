@@ -68,7 +68,37 @@ namespace WinToastLib {
         std::map<std::wstring, std::wstring> mPairs;
     };
 
-    class WinToastTemplate {
+    class WinToastNotification {
+    public:
+        explicit WinToastNotification(const std::wstring &xml);
+
+        ~WinToastNotification();
+
+        WinToastNotification(WinToastNotification &&o) noexcept;
+
+        WinToastNotification &operator=(WinToastNotification &&o) noexcept;
+
+        WinToastNotification(const WinToastNotification &o);
+
+        WinToastNotification &operator=(const WinToastNotification &o);
+
+        [[nodiscard]] std::wstring getXml() const;
+
+        bool setXml(const std::wstring &xml);
+
+        void show() const;
+
+    private:
+        class Impl;
+
+        std::unique_ptr<Impl> _impl;
+
+        [[nodiscard]] const Impl *d_func() const { return _impl.get(); }
+
+        [[nodiscard]] Impl *d_func() { return _impl.get(); }
+    };
+
+    class WinToastNotificationBuilder {
     public:
         enum class Scenario {
             Default, Alarm, IncomingCall, Reminder
@@ -123,75 +153,80 @@ namespace WinToastLib {
         };
 
 
-        explicit WinToastTemplate(WinToastTemplateType type = WinToastTemplateType::ImageAndText02);
+        explicit WinToastNotificationBuilder(WinToastTemplateType type = WinToastTemplateType::ImageAndText02);
 
-        ~WinToastTemplate();
+        ~WinToastNotificationBuilder();
 
-        void setFirstLine(const std::wstring &text);
+        WinToastNotificationBuilder(WinToastNotificationBuilder &&o) noexcept;
 
-        void setSecondLine(const std::wstring &text);
+        WinToastNotificationBuilder &operator=(WinToastNotificationBuilder &&o) noexcept;
 
-        void setThirdLine(const std::wstring &text);
+        WinToastNotificationBuilder(const WinToastNotificationBuilder &o);
 
-        void setTextField(const std::wstring &txt, TextField pos);
+        WinToastNotificationBuilder &operator=(const WinToastNotificationBuilder &o);
 
-        void setAttributionText(const std::wstring &attributionText);
+        WinToastNotificationBuilder &setFirstLine(const std::wstring &text);
 
-        void setImagePath(const std::wstring &imgPath);
+        WinToastNotificationBuilder &setSecondLine(const std::wstring &text);
 
-        void setAudioPath(WinToastTemplate::AudioSystemFile audio);
+        WinToastNotificationBuilder &setThirdLine(const std::wstring &text);
 
-        void setAudioPath(const std::wstring &audioPath);
+        WinToastNotificationBuilder &setTextField(const std::wstring &text, TextField pos);
 
-        void setAudioOption(WinToastTemplate::AudioOption audioOption);
+        WinToastNotificationBuilder &setAttributionText(const std::wstring &attributionText);
 
-        void setDuration(Duration duration);
+        WinToastNotificationBuilder &setImagePath(const std::wstring &imgPath);
 
-        void setExpiration(INT64 millisecondsFromNow);
+        WinToastNotificationBuilder &setAudioPath(AudioSystemFile file);
 
-        void setScenario(Scenario scenario);
+        WinToastNotificationBuilder &setAudioPath(const std::wstring &audioPath);
 
-        void addAction(const std::wstring &label);
+        WinToastNotificationBuilder &setAudioOption(AudioOption audioOption);
 
-        [[nodiscard]] std::size_t textFieldsCount() const;
+        WinToastNotificationBuilder &setDuration(Duration duration);
 
-        [[nodiscard]] std::size_t actionsCount() const;
+        WinToastNotificationBuilder &setExpiration(INT64 millisecondsFromNow);
+
+        WinToastNotificationBuilder &setScenario(Scenario scenario);
+
+        WinToastNotificationBuilder &addAction(const std::wstring &label);
+
+        [[nodiscard]] std::size_t getTextFieldsCount() const;
+
+        [[nodiscard]] std::size_t getActionsCount() const;
 
         [[nodiscard]] bool hasImage() const;
 
-        [[nodiscard]] const std::vector<std::wstring> &textFields() const;
+        [[nodiscard]] const std::vector<std::wstring> &getTextFields() const;
 
-        [[nodiscard]] const std::wstring &textField(TextField pos) const;
+        [[nodiscard]] const std::wstring &getTextField(TextField pos) const;
 
-        [[nodiscard]] const std::wstring &actionLabel(std::size_t pos) const;
+        [[nodiscard]] const std::wstring &getActionLabel(std::size_t pos) const;
 
-        [[nodiscard]] const std::wstring &imagePath() const;
+        [[nodiscard]] const std::wstring &getImagePath() const;
 
-        [[nodiscard]] const std::wstring &audioPath() const;
+        [[nodiscard]] const std::wstring &getAudioPath() const;
 
-        [[nodiscard]] const std::wstring &attributionText() const;
+        [[nodiscard]] const std::wstring &getAttributionText() const;
 
-        [[nodiscard]] const std::wstring &scenario() const;
+        [[nodiscard]] const std::wstring &getScenario() const;
 
-        [[nodiscard]] INT64 expiration() const;
+        [[nodiscard]] INT64 getExpiration() const;
 
-        [[nodiscard]] WinToastTemplateType type() const;
+        [[nodiscard]] WinToastTemplateType getType() const;
 
-        [[nodiscard]] WinToastTemplate::AudioOption audioOption() const;
+        [[nodiscard]] AudioOption getAudioOption() const;
 
-        [[nodiscard]] Duration duration() const;
+        [[nodiscard]] Duration getDuration() const;
 
     private:
-        std::vector<std::wstring> _textFields{};
-        std::vector<std::wstring> _actions{};
-        std::wstring _imagePath{};
-        std::wstring _audioPath{};
-        std::wstring _attributionText{};
-        std::wstring _scenario{L"Default"};
-        INT64 _expiration{0};
-        AudioOption _audioOption{WinToastTemplate::AudioOption::Default};
-        WinToastTemplateType _type{WinToastTemplateType::Text01};
-        Duration _duration{Duration::System};
+        class Impl;
+
+        std::unique_ptr<Impl> _impl;
+
+        [[nodiscard]] const Impl *d_func() const { return _impl.get(); }
+
+        [[nodiscard]] Impl *d_func() { return _impl.get(); }
     };
 
     namespace WinToast {
@@ -248,7 +283,7 @@ namespace WinToastLib {
         bool hideToast(INT64 id);
 
         INT64
-        showToast(const WinToastTemplate &toast, WinToastError *error = nullptr);
+        showToast(const WinToastNotificationBuilder &toast, WinToastError *error = nullptr);
 
         void clear();
 

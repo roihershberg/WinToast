@@ -6,7 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 add_library(WinToast STATIC
         src/wintoast.cpp
         src/win_toast_arguments.cpp
-        src/win_toast_template.cpp)
+        src/win_toast_notification.cpp
+        src/win_toast_notification_builder.cpp
+        )
 target_include_directories(WinToast PRIVATE
         src)
 target_include_directories(WinToast PUBLIC

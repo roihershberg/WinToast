@@ -69,7 +69,7 @@ int wmain(int argc, LPWSTR *argv) {
 
 
     bool onlyCreateShortcut = false;
-    WinToastTemplate::AudioOption audioOption = WinToastTemplate::AudioOption::Default;
+    WinToastNotificationBuilder::AudioOption audioOption = WinToastNotificationBuilder::AudioOption::Default;
 
     int i;
     for (i = 1; i < argc; i++)
@@ -90,7 +90,7 @@ int wmain(int argc, LPWSTR *argv) {
         else if (!wcscmp(COMMAND_SHORTCUT, argv[i]))
             onlyCreateShortcut = true;
         else if (!wcscmp(COMMAND_AUDIOSTATE, argv[i]))
-            audioOption = static_cast<WinToastTemplate::AudioOption>(std::stoi(argv[++i]));
+            audioOption = static_cast<WinToastNotificationBuilder::AudioOption>(std::stoi(argv[++i]));
         else if (!wcscmp(COMMAND_HELP, argv[i])) {
             print_help();
             return 0;
@@ -132,11 +132,11 @@ int wmain(int argc, LPWSTR *argv) {
     }
 
     bool withImage = !(imagePath.empty());
-    WinToastTemplate templ(withImage ? WinToastTemplate::WinToastTemplateType::ImageAndText02
-                                     : WinToastTemplate::WinToastTemplateType::Text02);
-    templ.setTextField(text, WinToastTemplate::TextField::FirstLine);
-    templ.setAudioOption(audioOption);
-    templ.setAttributionText(attribute);
+    WinToastNotificationBuilder templ(withImage ? WinToastNotificationBuilder::WinToastTemplateType::ImageAndText02
+                                                : WinToastNotificationBuilder::WinToastTemplateType::Text02);
+    templ.setTextField(text, WinToastNotificationBuilder::TextField::FirstLine)
+            .setAudioOption(audioOption)
+            .setAttributionText(attribute);
 
     for (auto const &action: actions)
         templ.addAction(action);

@@ -41,42 +41,16 @@
 #include <array>
 #include <string_view>
 
+#include "macros.h"
+
 #pragma comment(lib, "shlwapi")
 #pragma comment(lib, "propsys")
 #pragma comment(lib, "user32")
 #pragma comment(lib, "windowsapp")
 
-#ifdef NDEBUG
-#define DEBUG_MSG(str)
-#define DEBUG_ERR(str)
-#else
-#define DEBUG_MSG(str) std::wcout << str << std::endl
-#define DEBUG_ERR(str) std::wcerr << str << std::endl
-#endif
-
 #define DEFAULT_SHELL_LINKS_PATH    L"\\Microsoft\\Windows\\Start Menu\\Programs\\"
 #define DEFAULT_LINK_FORMAT            L".lnk"
 #define STATUS_SUCCESS (0x00000000)
-
-#define catchAndLogHresult_2(execute, logPrefix) \
-try {                                                     \
-    execute                                               \
-} catch (winrt::hresult_error const &ex) {                \
-    DEBUG_ERR(logPrefix << ex.message().c_str());         \
-}
-#define catchAndLogHresult_3(execute, logPrefix, onError) \
-try {                                                     \
-    execute                                               \
-} catch (winrt::hresult_error const &ex) {                \
-    DEBUG_ERR(logPrefix << ex.message().c_str());         \
-    onError                                               \
-}
-
-#define FUNC_CHOOSER(_f1, _f2, _f3, _f4, ...) _f4
-#define FUNC_RECOMPOSER(argsWithParentheses) FUNC_CHOOSER argsWithParentheses
-#define CHOOSE_FROM_ARG_COUNT(...) FUNC_RECOMPOSER((__VA_ARGS__, catchAndLogHresult_3, catchAndLogHresult_2, MISSING_PARAMETERS, MISSING_PARAMETERS))
-#define MACRO_CHOOSER(...) CHOOSE_FROM_ARG_COUNT(__VA_ARGS__)
-#define catchAndLogHresult(...) MACRO_CHOOSER(__VA_ARGS__)(__VA_ARGS__)
 
 using namespace WinToastLib;
 using namespace winrt::Windows::UI::Notifications;
@@ -123,23 +97,23 @@ namespace Util {
         return ((((INT64) now.dwHighDateTime) << 32) | now.dwLowDateTime);
     }
 
-    inline ToastTemplateType getToastTemplateType(const WinToastTemplate::WinToastTemplateType type) {
+    inline ToastTemplateType getToastTemplateType(const WinToastNotificationBuilder::WinToastTemplateType type) {
         switch (type) {
-            case WinToastTemplate::WinToastTemplateType::ImageAndText01:
+            case WinToastNotificationBuilder::WinToastTemplateType::ImageAndText01:
                 return ToastTemplateType::ToastImageAndText01;
-            case WinToastTemplate::WinToastTemplateType::ImageAndText02:
+            case WinToastNotificationBuilder::WinToastTemplateType::ImageAndText02:
                 return ToastTemplateType::ToastImageAndText02;
-            case WinToastTemplate::WinToastTemplateType::ImageAndText03:
+            case WinToastNotificationBuilder::WinToastTemplateType::ImageAndText03:
                 return ToastTemplateType::ToastImageAndText03;
-            case WinToastTemplate::WinToastTemplateType::ImageAndText04:
+            case WinToastNotificationBuilder::WinToastTemplateType::ImageAndText04:
                 return ToastTemplateType::ToastImageAndText04;
-            case WinToastTemplate::WinToastTemplateType::Text01:
+            case WinToastNotificationBuilder::WinToastTemplateType::Text01:
                 return ToastTemplateType::ToastText01;
-            case WinToastTemplate::WinToastTemplateType::Text02:
+            case WinToastNotificationBuilder::WinToastTemplateType::Text02:
                 return ToastTemplateType::ToastText02;
-            case WinToastTemplate::WinToastTemplateType::Text03:
+            case WinToastNotificationBuilder::WinToastTemplateType::Text03:
                 return ToastTemplateType::ToastText03;
-            case WinToastTemplate::WinToastTemplateType::Text04:
+            case WinToastNotificationBuilder::WinToastTemplateType::Text04:
                 return ToastTemplateType::ToastText04;
             default:
                 winrt::throw_hresult(E_INVALIDARG);
@@ -727,7 +701,7 @@ namespace WinToastLib::WinToast {
         imageElement.SetAttribute(L"src", imagePath);
     }
 
-    void setAudioFieldHelper(XmlDocument xml, const std::wstring &path, WinToastTemplate::AudioOption option) {
+    void setAudioFieldHelper(XmlDocument xml, const std::wstring &path, WinToastNotificationBuilder::AudioOption option) {
         Util::createElement(xml, L"toast", L"audio");
 
         XmlElement audioElement = xml.SelectSingleNode(L"//audio[1]").as<XmlElement>();
@@ -737,10 +711,10 @@ namespace WinToastLib::WinToast {
         }
 
         switch (option) {
-            case WinToastTemplate::AudioOption::Loop:
+            case WinToastNotificationBuilder::AudioOption::Loop:
                 audioElement.SetAttribute(L"loop", L"true");
                 break;
-            case WinToastTemplate::AudioOption::Silent:
+            case WinToastNotificationBuilder::AudioOption::Silent:
                 audioElement.SetAttribute(L"silent", L"true");
             default:
                 break;
@@ -765,7 +739,7 @@ namespace WinToastLib::WinToast {
         actionsElement.AppendChild(actionElement);
     }
 
-    INT64 showToast(const WinToastTemplate &toast, WinToastError *error) {
+    INT64 showToast(const WinToastNotificationBuilder &toast, WinToastError *error) {
         setError(error, WinToast::WinToastError::NoError);
         INT64 id = 0;
         if (!isInitialized()) {
@@ -787,7 +761,7 @@ namespace WinToastLib::WinToast {
         catchAndLogHresult(
                 {
                     xmlDocument = ToastNotificationManager::GetTemplateContent(
-                            Util::getToastTemplateType(toast.type())
+                            Util::getToastTemplateType(toast.getType())
                     );
                 },
                 "Error in showToast while getting template content: ",
@@ -800,9 +774,9 @@ namespace WinToastLib::WinToast {
                 {
                     XmlNodeList textFields = xmlDocument.GetElementsByTagName(L"text");
 
-                    for (UINT32 i = 0, fieldsCount = static_cast<UINT32>(toast.textFieldsCount());
+                    for (UINT32 i = 0, fieldsCount = static_cast<UINT32>(toast.getTextFieldsCount());
                          i < fieldsCount; i++) {
-                        textFields.Item(i).InnerText(toast.textField(WinToastTemplate::TextField(i)));
+                        textFields.Item(i).InnerText(toast.getTextField(WinToastNotificationBuilder::TextField(i)));
                     }
                 },
                 "Error in showToast while setting text fields: ",
@@ -815,11 +789,11 @@ namespace WinToastLib::WinToast {
         // Modern feature are supported Windows > Windows 10
         if (isSupportingModernFeatures()) {
 
-            // Note that we do this *after* using toast.textFieldsCount() to
+            // Note that we do this *after* using toast.getTextFieldsCount() to
             // iterate/fill the template's text fields, since we're adding yet another text field.
-            if (!toast.attributionText().empty()) {
+            if (!toast.getAttributionText().empty()) {
                 catchAndLogHresult(
-                        { setAttributionTextFieldHelper(xmlDocument, toast.attributionText()); },
+                        { setAttributionTextFieldHelper(xmlDocument, toast.getAttributionText()); },
                         "Error in setAttributionTextFieldHelper: ",
                         {
                             setError(error, WinToast::WinToastError::UnknownError);
@@ -830,11 +804,11 @@ namespace WinToastLib::WinToast {
 
             catchAndLogHresult(
                     {
-                        for (std::size_t i = 0, actionsCount = toast.actionsCount(); i < actionsCount; i++) {
+                        for (std::size_t i = 0, actionsCount = toast.getActionsCount(); i < actionsCount; i++) {
                             WinToastArguments winToastArguments;
 
                             winToastArguments[L"actionId"] = std::to_wstring(i);
-                            addActionHelper(xmlDocument, toast.actionLabel(i), winToastArguments.toString());
+                            addActionHelper(xmlDocument, toast.getActionLabel(i), winToastArguments.toString());
                         }
                     },
                     "Error in addActionHelper: ",
@@ -844,9 +818,9 @@ namespace WinToastLib::WinToast {
                     }
             )
 
-            if (toast.audioPath().empty() && toast.audioOption() == WinToastTemplate::AudioOption::Default) {
+            if (toast.getAudioPath().empty() && toast.getAudioOption() == WinToastNotificationBuilder::AudioOption::Default) {
                 catchAndLogHresult(
-                        { setAudioFieldHelper(xmlDocument, toast.audioPath(), toast.audioOption()); },
+                        { setAudioFieldHelper(xmlDocument, toast.getAudioPath(), toast.getAudioOption()); },
                         "Error in setAudioFieldHelper: ",
                         {
                             setError(error, WinToast::WinToastError::UnknownError);
@@ -857,12 +831,12 @@ namespace WinToastLib::WinToast {
 
             auto toastElement = xmlDocument.SelectSingleNode(L"//toast[1]").as<XmlElement>();
 
-            if (toast.duration() != WinToastTemplate::Duration::System) {
+            if (toast.getDuration() != WinToastNotificationBuilder::Duration::System) {
                 catchAndLogHresult(
                         {
                             toastElement.SetAttribute(L"duration",
-                                                      (toast.duration() == WinToastTemplate::Duration::Short) ? L"short"
-                                                                                                              : L"long");
+                                                      (toast.getDuration() == WinToastNotificationBuilder::Duration::Short) ? L"short"
+                                                                                                                 : L"long");
                         },
                         "Error in showToast while setting duration: ",
                         {
@@ -873,7 +847,7 @@ namespace WinToastLib::WinToast {
             }
 
             catchAndLogHresult(
-                    { toastElement.SetAttribute(L"scenario", toast.scenario()); },
+                    { toastElement.SetAttribute(L"scenario", toast.getScenario()); },
                     "Error in showToast while setting scenario: ",
                     {
                         setError(error, WinToast::WinToastError::UnknownError);
@@ -887,7 +861,7 @@ namespace WinToastLib::WinToast {
 
         if (toast.hasImage()) {
             catchAndLogHresult(
-                    { setImageFieldHelper(xmlDocument, toast.imagePath()); },
+                    { setImageFieldHelper(xmlDocument, toast.getImagePath()); },
                     "Error in setImageFieldHelper: ",
                     {
                         setError(error, WinToast::WinToastError::UnknownError);
@@ -899,7 +873,7 @@ namespace WinToastLib::WinToast {
         ToastNotification notification{nullptr};
         catchAndLogHresult(
                 {
-                    INT64 relativeExpiration = toast.expiration();
+                    INT64 relativeExpiration = toast.getExpiration();
                     notification = xmlDocument;
                     if (relativeExpiration > 0) {
                         winrt::Windows::Foundation::DateTime expirationDateTime{
